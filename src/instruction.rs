@@ -1,5 +1,9 @@
+use std::convert::From;
+
+/// These are the opcodes of the Iota instruction set,
+/// shown with their single-character mnemonics and long mnemonics.
 #[derive(Debug)]
-enum Instruction {
+pub enum Instruction {
     /// No-operation, do-nothing
     /// mnemonic `;`
     /// numeric `0`
@@ -10,7 +14,7 @@ enum Instruction {
     /// PC = PC + 1 mod L
     /// SP = no change
     /// NZ = no change
-    Nope,
+    Nop,
     /// Reset
     /// mnemonic `R`
     /// numeric `1`
@@ -47,9 +51,10 @@ enum Instruction {
     Out,
     /// Pop a word from the stack
     /// mnemonic `p`
+    /// numeric `5`
     ///
-    /// SP=SP+ 1 mod L
-    /// PC=PC+ 1 mod L
+    /// SP = SP + 1 mod L
+    /// PC = PC + 1 mod L
     /// NZ = true if the item popped is nonzero, else false
     Pop,
     /// Duplicate the last stacked value
@@ -215,7 +220,7 @@ enum Instruction {
     /// mnemonic `(`
     /// numeric `23`
     ///
-    /// *SP = *SP<< 1 trunc W
+    /// *SP = *SP << 1 trunc W
     /// PC = PC + 1 mod L
     /// NZ = true if the result is nonzero, else false
     Shl,
@@ -232,7 +237,7 @@ enum Instruction {
     /// numeric `25`
     ///
     /// *SP = NOT *SP trunc W
-    /// PC = PC+ 1 mod L
+    /// PC = PC + 1 mod L
     /// NZ = true if the result is nonzero, else false
     Not,
     /// Branch if zero (NZ flag is false)
@@ -399,4 +404,142 @@ enum Instruction {
     /// SP = no change
     /// NZ = no change
     Skip5,
+    /// Skip five instructions
+    /// mnemonic `6`
+    /// numeric `42`
+    ///
+    /// PC = PC + 7 mod L
+    /// SP = no change
+    /// NZ = no change
+    Skip6,
+    /// Skip five instructions
+    /// mnemonic `7`
+    /// numeric `43`
+    ///
+    /// PC = PC + 8 mod L
+    /// SP = no change
+    /// NZ = no change
+    Skip7,
+    /// Skip five instructions
+    /// mnemonic `8`
+    /// numeric `44`
+    ///
+    /// PC = PC + 9 mod L
+    /// SP = no change
+    /// NZ = no change
+    Skip8,
+    /// Skip five instructions
+    /// mnemonic `9`
+    /// numeric `45`
+    ///
+    /// PC = PC + 10 mod L
+    /// SP = no change
+    /// NZ = no change
+    Skip9,
+}
+
+impl From<char> for Instruction {
+    fn from(c: char) -> Self {
+        match c {
+            'R' => Instruction::Reset,
+            'H' => Instruction::Halt,
+            'I' => Instruction::In,
+            'O' => Instruction::Out,
+            'p' => Instruction::Pop,
+            'D' => Instruction::Dup,
+            'C' => Instruction::PushPc,
+            'c' => Instruction::PopPc,
+            'Y' => Instruction::PopSp,
+            'G' => Instruction::SpTgt,
+            'P' => Instruction::PushNz,
+            'S' => Instruction::Swap,
+            '0' => Instruction::Push0,
+            '+' => Instruction::Add,
+            '-' => Instruction::Sub,
+            '.' => Instruction::Inc,
+            ',' => Instruction::Dec,
+            '*' => Instruction::Mul,
+            '/' => Instruction::Div,
+            '^' => Instruction::Xor,
+            '&' => Instruction::And,
+            '|' => Instruction::Or,
+            '(' => Instruction::Shl,
+            ')' => Instruction::Shr,
+            '~' => Instruction::Not,
+            'Z' => Instruction::Bz,
+            'z' => Instruction::Bnz,
+            '=' => Instruction::Beq,
+            '>' => Instruction::Bgt,
+            '{' => Instruction::Blt,
+            '}' => Instruction::Bge,
+            'L' => Instruction::Loop,
+            ']' => Instruction::EndL,
+            'B' => Instruction::BraN,
+            'b' => Instruction::BraP,
+            'T' => Instruction::Target,
+            '1' => Instruction::Skip1,
+            '2' => Instruction::Skip2,
+            '3' => Instruction::Skip3,
+            '4' => Instruction::Skip4,
+            '5' => Instruction::Skip5,
+            '6' => Instruction::Skip6,
+            '7' => Instruction::Skip7,
+            '8' => Instruction::Skip8,
+            '9' => Instruction::Skip9,
+            ';' | _ => Instruction::Nop,
+        }
+    }
+}
+
+impl From<u8> for Instruction {
+    fn from(c: u8) -> Self {
+        match c {
+            0  => Instruction::Reset,
+            1  => Instruction::Halt,
+            2  => Instruction::In,
+            3  => Instruction::Out,
+            4  => Instruction::Pop,
+            5  => Instruction::Dup,
+            6  => Instruction::PushPc,
+            7  => Instruction::PopPc,
+            8  => Instruction::PopSp,
+            9  => Instruction::SpTgt,
+            10 => Instruction::PushNz,
+            11 => Instruction::Swap,
+            12 => Instruction::Push0,
+            13 => Instruction::Add,
+            14 => Instruction::Sub,
+            15 => Instruction::Inc,
+            16 => Instruction::Dec,
+            17 => Instruction::Mul,
+            18 => Instruction::Div,
+            19 => Instruction::Xor,
+            20 => Instruction::And,
+            21 => Instruction::Or,
+            22 => Instruction::Shl,
+            23 => Instruction::Shr,
+            24 => Instruction::Not,
+            25 => Instruction::Bz,
+            26 => Instruction::Bnz,
+            27 => Instruction::Beq,
+            28 => Instruction::Bgt,
+            29 => Instruction::Blt,
+            30 => Instruction::Bge,
+            31 => Instruction::Loop,
+            32 => Instruction::EndL,
+            33 => Instruction::BraN,
+            34 => Instruction::BraP,
+            35 => Instruction::Target,
+            36 => Instruction::Skip1,
+            37 => Instruction::Skip2,
+            38 => Instruction::Skip3,
+            39 => Instruction::Skip4,
+            40 => Instruction::Skip5,
+            41 => Instruction::Skip6,
+            42 => Instruction::Skip7,
+            43 => Instruction::Skip8,
+            44 => Instruction::Skip9,
+            45 | _ => Instruction::Nop,
+        }
+    }
 }

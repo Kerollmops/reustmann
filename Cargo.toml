@@ -12,4 +12,3 @@ name = "reustmann"
 doc = false
 
 [dependencies]
-nom = "1.2"

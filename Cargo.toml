@@ -1,6 +1,15 @@
 [package]
 name = "Reustmann"
 version = "0.1.0"
-authors = ["Clément Renault <renault.cle@gmail.com>"]
+authors = ["Kerosene2000 <renault.cle@gmail.com>"]
+description = "Reustmann is a Von Neumann architecture"
+documentation = "http://Kerosene2000.github.io/reustmann/reustmann/"
+repository = "https://github.com/Kerosene2000/Reustmann"
+license = "MIT"
+
+[[bin]]
+name = "Reustmann"
+doc = false
 
 [dependencies]
+nom = "1.2"

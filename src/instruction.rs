@@ -202,6 +202,201 @@ enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = true if the result is nonzero, else false
     And,
+    /// Bitwise OR the top two stacked words and push the result
+    /// mnemonic `|`
+    /// numeric `22`
     ///
+    /// SP = SP - 1 mod L
+    /// *SP = (*(SP + 2 mod L) OR *(SP + 2 mod L)) trunc W
+    /// PC = PC + 1 mod L
+    /// NZ = true if the result is nonzero, else false
     Or,
+    /// Logical shift left
+    /// mnemonic `(`
+    /// numeric `23`
+    ///
+    /// *SP = *SP<< 1 trunc W
+    /// PC = PC + 1 mod L
+    /// NZ = true if the result is nonzero, else false
+    Shl,
+    /// Logical shift right
+    /// mnemonic `)`
+    /// numeric `24`
+    ///
+    /// *SP= *SP >> 1 trunc W
+    /// PC = PC + 1 mod L
+    /// NZ = true if the result is nonzero, else false
+    Shr,
+    /// Bitwise NOT
+    /// mnemonic `~`
+    /// numeric `25`
+    ///
+    /// *SP = NOT *SP trunc W
+    /// PC = PC+ 1 mod L
+    /// NZ = true if the result is nonzero, else false
+    Not,
+    /// Branch if zero (NZ flag is false)
+    /// mnemonic `Z`
+    /// numeric `26`
+    /// Skips one opcode if NZ is false.
+    ///
+    /// if NZ is false:
+    ///     PC = PC + 2 mod L
+    /// else:
+    ///     PC = PC + 1 mod L
+    /// SP = no change NZ = no change
+    Bz,
+    /// Branch if nonzero (NZ flag is true)
+    /// mnemonic `z`
+    /// numeric `27`
+    /// Skips one opcode if NZ is true.
+    ///
+    /// if NZ is true:
+    ///     PC = PC + 2 mod L
+    /// else:
+    ///     PC = PC + 1 mod L
+    /// SP = no change NZ = no change
+    Bnz,
+    /// Compare top two stacked words, branch if equal
+    /// mnemonic `=`
+    /// numeric `28`
+    ///
+    /// if *(SP + 1 mod L) .eq. *SP
+    ///     PC = PC+ 2 mod L
+    /// else
+    ///     PC = PC + 1 mod L
+    /// SP = no change NZ = no change
+    Beq,
+    /// Compare top two stacked words, branch if greater than
+    /// mnemonic `>`
+    /// numeric `29`
+    ///
+    /// if *(SP + 1 mod L) > *SP
+    ///     PC = PC + 2 mod L
+    /// else
+    ///     PC = PC + 1 mod L
+    /// SP = no change NZ = no change
+    Bgt,
+    /// Compare top two stacked words, branch if less than
+    /// mnemonic `{`
+    /// numeric `30`
+    ///
+    /// if *(SP + 1 mod L) < *SP
+    ///     PC = PC + 2 mod L
+    /// else
+    ///     PC = PC + 1 mod L
+    /// SP = no change NZ = no change
+    Blt,
+    /// Compare top two stacked words, branch if greater than or equal
+    /// mnemonic `}`
+    /// numeric `31`
+    ///
+    /// if *(SP + 1 mod L) ≥ * SP
+    /// PC = PC + 2 mod L
+    /// else
+    ///     PC = PC + 1 mod L
+    /// SP = no change NZ = no change
+    Bge,
+    /// Repeat the following instructions up to the next ENDL
+    /// mnemonic `L`
+    /// numeric `32`
+    ///
+    /// PC = PC + 1 mod L
+    /// SP = no change
+    /// NZ = no change
+    Loop,
+    /// End of LOOP
+    /// mnemonic `]`
+    /// numeric `33`
+    /// Execution resumes at the instruction following the preceding LOOP opcode.
+    /// A search for the preceding LOOP opcode is done at the time the ENDL instruction is encountered,
+    /// from the current PC to location 0. The search does not wrap around.
+    /// If no LOOP opcode is found, or if the PC is already at location 0,
+    /// the ENDL is executed as if it were a NOP instruction.
+    ///
+    /// If there is a preceding LOOP instruction:
+    ///     PC = location of LOOP opcode + 1
+    /// else:
+    ///     PC = PC + 1 mod L
+    /// SP = no change NZ = no change
+    EndL,
+    /// Branch to the next TARGET opcode
+    /// mnemonic `B`
+    /// numeric `34`
+    /// A search for the subsequent TARGET opcode is done at the time the BRAN instruction is encountered,
+    /// from the BRAN instruction to memory location L - 1.
+    /// The search does not wrap around. If no TARGET opcode is found,
+    /// the BRAN is executed as if it were a NOP instruction.
+    /// If the TARGET is found at memory location L – 1, execution will resume at location 0.
+    ///
+    /// If there is a subsequent TARGET instruction:
+    ///     PC = (location of TARGET opcode + 1) mod L
+    /// else:
+    ///     PC = PC + 1 mod L
+    /// SP = no change NZ = no change
+    BraN,
+    /// Branch to the previous TARGET opcode
+    /// mnemonic `b`
+    /// numeric `35`
+    /// A search for the previous TARGET opcode is done at the time the BRAP instruction is encountered,
+    /// from the BRAP instruction to memory location 0. The search does not wrap around.\
+    /// If no TARGET opcode is found or if the PC is already at location 0,
+    /// the BRAP is executed as if it were a NOP. instruction.
+    ///
+    /// If there is a prior TARGET instruction:
+    ///     PC = location of TARGET opcode + 1
+    /// else:
+    ///     PC = PC + 1 mod L
+    /// SP = no change NZ = no change
+    BraP,
+    /// Branch target for BRAN and BRAP
+    /// mnemonic `T`
+    /// numeric `36`
+    /// See SPTGT, BRAN, and BRAP instructions for the semantics.
+    /// The TARGET opcode is just a marker, and is executed as if it were a NOP.
+    ///
+    /// PC = PC + 1 mod L
+    /// SP = no change
+    /// NZ = no change
+    Target,
+    /// Skip one instruction
+    /// mnemonic `1`
+    /// numeric `37`
+    ///
+    /// PC = PC + 2 mod L
+    /// SP = no change
+    /// NZ = no change
+    Skip1,
+    /// Skip two instructions
+    /// mnemonic `2`
+    /// numeric `38`
+    ///
+    /// PC = PC + 3 mod L
+    /// SP = no change
+    /// NZ = no change
+    Skip2,
+    /// Skip three instructions
+    /// mnemonic `3`
+    /// numeric `39`
+    ///
+    /// PC = PC + 4 mod L
+    /// SP = no change
+    /// NZ = no change
+    Skip3,
+    /// Skip four instructions
+    /// mnemonic `4`
+    /// numeric `40`
+    ///
+    /// PC = PC + 5 mod L
+    /// SP = no change
+    /// NZ = no change
+    Skip4,
+    /// Skip five instructions
+    /// mnemonic `5`
+    /// numeric `41`
+    ///
+    /// PC = PC + 6 mod L
+    /// SP = no change
+    /// NZ = no change
+    Skip5,
 }

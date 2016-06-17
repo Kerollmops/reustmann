@@ -49,12 +49,12 @@ impl Interpreter {
 
     /// copy your program in the memory of the machine
     pub fn copy_program(&mut self, program: &Program) -> Result<(), &'static str> {
-        let program = &program.instructions();
-        if program.len() > self.memory.len() {
+        let memory = program.memory().op_codes();
+        if memory.len() > self.memory.len() {
             return Err("Program len is bigger than memory len");
         }
-        for i in 0..program.len() {
-            self.memory[i] = program[i].into();
+        for i in 0..memory.len() {
+            self.memory[i] = memory[i].into();
         }
         Ok(())
     }

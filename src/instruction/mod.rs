@@ -664,3 +664,56 @@ impl From<Instruction> for OpCode {
         i as OpCode
     }
 }
+
+impl From<Instruction> for &'static str {
+    fn from(c: Instruction) -> Self {
+        match c {
+            Reset   => "Reset",
+            Halt    => "Halt",
+            In      => "In",
+            Out     => "Out",
+            Pop     => "Pop",
+            Dup     => "Dup",
+            PushPc  => "PushPc",
+            PopPc   => "PopPc",
+            PopSp   => "PopSp",
+            SpTgt   => "SpTgt",
+            PushNz  => "PushNz",
+            Swap    => "Swap",
+            Push0   => "Push0",
+            Add     => "Add",
+            Sub     => "Sub",
+            Inc     => "Inc",
+            Dec     => "Dec",
+            Mul     => "Mul",
+            Div     => "Div",
+            Xor     => "Xor",
+            And     => "And",
+            Or      => "Or",
+            Shl     => "Shl",
+            Shr     => "Shr",
+            Not     => "Not",
+            Bz      => "Bz",
+            Bnz     => "Bnz",
+            Beq     => "Beq",
+            Bgt     => "Bgt",
+            Blt     => "Blt",
+            Bge     => "Bge",
+            Loop    => "Loop",
+            EndL    => "EndL",
+            BraN    => "BraN",
+            BraP    => "BraP",
+            Target  => "Target",
+            Skip1   => "Skip1",
+            Skip2   => "Skip2",
+            Skip3   => "Skip3",
+            Skip4   => "Skip4",
+            Skip5   => "Skip5",
+            Skip6   => "Skip6",
+            Skip7   => "Skip7",
+            Skip8   => "Skip8",
+            Skip9   => "Skip9",
+            Nop     => "Nop",
+        }
+    }
+}

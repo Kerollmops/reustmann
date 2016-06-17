@@ -52,13 +52,13 @@ impl<'a, R: Read, W: Write> Interpreter<'a, R, W> {
     }
 
     #[inline]
-    fn move_pc_n(&mut self, n: usize) {
+    fn increment_pc_n(&mut self, n: usize) {
         self.pc = self.pc.wrapping_add(n) % self.memory.len();
     }
 
     #[inline]
-    fn move_pc(&mut self) {
-        self.move_pc_n(1); // FIXME cod it here
+    fn inscrement_pc(&mut self) {
+        self.increment_pc_n(1); // FIXME code it here
     }
 
     // fn push_on_stack(&mut self) {
@@ -74,7 +74,7 @@ impl<'a, R: Read, W: Write> Interpreter<'a, R, W> {
 
     fn execute(&mut self, instr: Instruction) -> Statement {
         match instr {
-            Nop    => self.move_pc(),
+            Nop    => self.inscrement_pc(),
             Reset  => {
                 self.pc = 0;
                 self.sp = 0;
@@ -115,15 +115,15 @@ impl<'a, R: Read, W: Write> Interpreter<'a, R, W> {
             BraN   => { self.execute(Nop); }
             BraP   => { self.execute(Nop); }
             Target => { self.execute(Nop); }
-            Skip1  => self.move_pc_n(2),
-            Skip2  => self.move_pc_n(3),
-            Skip3  => self.move_pc_n(4),
-            Skip4  => self.move_pc_n(5),
-            Skip5  => self.move_pc_n(6),
-            Skip6  => self.move_pc_n(7),
-            Skip7  => self.move_pc_n(8),
-            Skip8  => self.move_pc_n(9),
-            Skip9  => self.move_pc_n(10),
+            Skip1  => self.increment_pc_n(2),
+            Skip2  => self.increment_pc_n(3),
+            Skip3  => self.increment_pc_n(4),
+            Skip4  => self.increment_pc_n(5),
+            Skip5  => self.increment_pc_n(6),
+            Skip6  => self.increment_pc_n(7),
+            Skip7  => self.increment_pc_n(8),
+            Skip8  => self.increment_pc_n(9),
+            Skip9  => self.increment_pc_n(10),
         };
         Statement::Success
     }

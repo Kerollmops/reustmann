@@ -1,8 +1,7 @@
 use std::io::{Read, Write};
-// use instruction::Instruction;
-// use instruction::OpCode;
 use instruction::op_codes::*;
 use super::Program;
+use super::OpCodes;
 
 /// the statement the machine cna return
 pub enum Statement {
@@ -18,7 +17,7 @@ use self::Statement::{Success, HaltInstruction};
 /// The main interpreter, execute instructions, read from input,
 /// write to output
 pub struct Interpreter {
-    arch_width: u8, // [6..32)
+    arch_width: u8,      // [6..32)
     memory: Vec<OpCode>, // [1..2^64)
     pc: usize,
     sp: usize,
@@ -47,15 +46,17 @@ impl Interpreter {
         })
     }
 
-    /// copy your program in the memory of the machine
+    /// copy your program in the memory of the machine, a reset is done after
+    /// program loaded
     pub fn copy_program(&mut self, program: &Program) -> Result<(), &'static str> {
-        let memory = program.memory().op_codes();
-        if memory.len() > self.memory.len() {
+        let OpCodes(op_codes) = program.memory().clone().into();
+        if op_codes.len() > self.memory.len() {
             return Err("Program len is bigger than memory len");
         }
-        for i in 0..memory.len() {
-            self.memory[i] = memory[i].into();
+        for i in 0..op_codes.len() {
+            self.memory[i] = op_codes[i].into();
         }
+        self.reset();
         Ok(())
     }
 
@@ -103,6 +104,7 @@ impl Interpreter {
         val & ((1 << self.arch_width) - 1)
     }
 
+    // FIXME use Bytes iterator ?
     fn execute<R: Read, W: Write>(&mut self, op: OpCode, input: &mut R, output: &mut W) -> Statement {
         match op {
             RESET  => self.reset(),

@@ -1,9 +1,9 @@
 use std::io::Read;
 use super::Instruction;
-use super::Memory;
+use super::Mnemonics;
 use std::vec::Vec;
 
-pub struct Program(Memory); // FIXME use memory object
+pub struct Program(Mnemonics);
 
 impl Program {
     pub fn new(input: &mut Read) -> Result<Program, &'static str> {
@@ -18,10 +18,10 @@ impl Program {
         for c in content {
             instructions.push((c as char).into());
         }
-        Ok(Program(Memory::ShortMnemonic(instructions)))
+        Ok(Program(Mnemonics(instructions)))
     }
 
-    pub fn memory(&self) -> &Memory {
+    pub fn memory(&self) -> &Mnemonics {
         &self.0
     }
 }

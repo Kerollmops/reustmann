@@ -1,6 +1,7 @@
 use std::io::{Read, Write};
-use super::Instruction;
-use super::Instruction::*;
+// use instruction::Instruction;
+// use instruction::OpCode;
+use instruction::op_codes::*;
 use super::Program;
 
 /// the statement the machine cna return
@@ -72,58 +73,58 @@ impl<'a, R: Read, W: Write> Interpreter<'a, R, W> {
         word
     }
 
-    fn execute(&mut self, instr: Instruction) -> Statement {
-        match instr {
-            Nop    => self.inscrement_pc(),
-            Reset  => {
+    fn execute(&mut self, op_code: OpCode) -> Statement {
+        match op_code {
+            RESET  => {
                 self.pc = 0;
                 self.sp = 0;
                 self.nz = false;
             },
-            Halt   => return Statement::HaltInstruction,
-            In     => { self.execute(Nop); }
-            Out    => { self.execute(Nop); }
-            Pop    => { self.execute(Nop); }
-            Dup    => { self.execute(Nop); }
-            PushPc => { self.execute(Nop); }
-            PopPc  => { self.execute(Nop); }
-            PopSp  => { self.execute(Nop); }
-            SpTgt  => { self.execute(Nop); }
-            PushNz => { self.execute(Nop); }
-            Swap   => { self.execute(Nop); }
-            Push0  => { self.execute(Nop); }
-            Add    => { self.execute(Nop); }
-            Sub    => { self.execute(Nop); }
-            Inc    => { self.execute(Nop); }
-            Dec    => { self.execute(Nop); }
-            Mul    => { self.execute(Nop); }
-            Div    => { self.execute(Nop); }
-            Xor    => { self.execute(Nop); }
-            And    => { self.execute(Nop); }
-            Or     => { self.execute(Nop); }
-            Shl    => { self.execute(Nop); }
-            Shr    => { self.execute(Nop); }
-            Not    => { self.execute(Nop); }
-            Bz     => { self.execute(Nop); }
-            Bnz    => { self.execute(Nop); }
-            Beq    => { self.execute(Nop); }
-            Bgt    => { self.execute(Nop); }
-            Blt    => { self.execute(Nop); }
-            Bge    => { self.execute(Nop); }
-            Loop   => { self.execute(Nop); }
-            EndL   => { self.execute(Nop); }
-            BraN   => { self.execute(Nop); }
-            BraP   => { self.execute(Nop); }
-            Target => { self.execute(Nop); }
-            Skip1  => self.increment_pc_n(2),
-            Skip2  => self.increment_pc_n(3),
-            Skip3  => self.increment_pc_n(4),
-            Skip4  => self.increment_pc_n(5),
-            Skip5  => self.increment_pc_n(6),
-            Skip6  => self.increment_pc_n(7),
-            Skip7  => self.increment_pc_n(8),
-            Skip8  => self.increment_pc_n(9),
-            Skip9  => self.increment_pc_n(10),
+            HALT   => return Statement::HaltInstruction,
+            IN     => { self.execute(NOP); }
+            OUT    => { self.execute(NOP); }
+            POP    => { self.execute(NOP); }
+            DUP    => { self.execute(NOP); }
+            PUSHPC => { self.execute(NOP); }
+            POPPC  => { self.execute(NOP); }
+            POPSP  => { self.execute(NOP); }
+            SPTGT  => { self.execute(NOP); }
+            PUSHNZ => { self.execute(NOP); }
+            SWAP   => { self.execute(NOP); }
+            PUSH0  => { self.execute(NOP); }
+            ADD    => { self.execute(NOP); }
+            SUB    => { self.execute(NOP); }
+            INC    => { self.execute(NOP); }
+            DEC    => { self.execute(NOP); }
+            MUL    => { self.execute(NOP); }
+            DIV    => { self.execute(NOP); }
+            XOR    => { self.execute(NOP); }
+            AND    => { self.execute(NOP); }
+            OR     => { self.execute(NOP); }
+            SHL    => { self.execute(NOP); }
+            SHR    => { self.execute(NOP); }
+            NOT    => { self.execute(NOP); }
+            BZ     => { self.execute(NOP); }
+            BNZ    => { self.execute(NOP); }
+            BEQ    => { self.execute(NOP); }
+            BGT    => { self.execute(NOP); }
+            BLT    => { self.execute(NOP); }
+            BGE    => { self.execute(NOP); }
+            LOOP   => { self.execute(NOP); }
+            ENDL   => { self.execute(NOP); }
+            BRAN   => { self.execute(NOP); }
+            BRAP   => { self.execute(NOP); }
+            TARGET => { self.execute(NOP); }
+            SKIP1  => self.increment_pc_n(2),
+            SKIP2  => self.increment_pc_n(3),
+            SKIP3  => self.increment_pc_n(4),
+            SKIP4  => self.increment_pc_n(5),
+            SKIP5  => self.increment_pc_n(6),
+            SKIP6  => self.increment_pc_n(7),
+            SKIP7  => self.increment_pc_n(8),
+            SKIP8  => self.increment_pc_n(9),
+            SKIP9  => self.increment_pc_n(10),
+            NOP | _ => self.inscrement_pc(),
         };
         Statement::Success
     }

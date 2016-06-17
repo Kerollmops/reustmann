@@ -1,5 +1,11 @@
 use std::convert::From;
 
+pub mod op_codes;
+pub mod mnemonics;
+
+pub use self::mnemonics::Mnemonic;
+pub use self::op_codes::OpCode;
+
 /// These are the opcodes of the Reustmann instruction set,
 /// shown with their single-character mnemonics and long mnemonics.
 #[derive(Debug, Clone, Copy)]
@@ -15,7 +21,7 @@ pub enum Instruction {
     /// SP = no change
     /// NZ = no change
     /// ```
-    Nop,
+    Nop = op_codes::NOP as isize,
     /// Reset, `R`
     ///
     /// ```ignore
@@ -23,11 +29,11 @@ pub enum Instruction {
     /// SP = 0
     /// NZ = false
     /// ```
-    Reset,
+    Reset = op_codes::RESET as isize,
     /// Halt program execution, `H`
     ///
     /// Causes program execution to stop.
-    Halt,
+    Halt = op_codes::HALT as isize,
     /// Input a char from stdin, push it onto the stack, `I`
     ///
     /// ```ignore
@@ -36,7 +42,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = true if the result stacked is nonzero, else false
     /// ```
-    In,
+    In = op_codes::IN as isize,
     /// Pop a word from the stack, output to stdout, `O`
     ///
     /// If the value on the top of the stack is outside the range of a char,
@@ -49,7 +55,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = true if the character output is nonzero, else false
     /// ```
-    Out,
+    Out = op_codes::OUT as isize,
     /// Pop a word from the stack, `p`
     ///
     /// ```ignore
@@ -57,7 +63,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = true if the item popped is nonzero, else false
     /// ```
-    Pop,
+    Pop = op_codes::POP as isize,
     /// Duplicate the last stacked value, `D`
     ///
     /// ```ignore
@@ -67,7 +73,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = true if the value duplicated is nonzero, else false
     /// ```
-    Dup,
+    Dup = op_codes::DUP as isize,
     /// Push the PC onto the stack, `C`
     ///
     /// ```ignore
@@ -76,7 +82,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = no change
     /// ```
-    PushPc,
+    PushPc = op_codes::PUSHPC as isize,
     /// Pop the PC from the stack, `c`
     ///
     /// ```ignore
@@ -84,7 +90,7 @@ pub enum Instruction {
     /// SP = SP + 1 mod L
     /// NZ = no change
     /// ```
-    PopPc,
+    PopPc = op_codes::POPPC as isize,
     /// Pop the SP from the stack, `Y`
     ///
     /// ```ignore
@@ -92,7 +98,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = no change
     /// ```
-    PopSp,
+    PopSp = op_codes::POPSP as isize,
     /// Set the SP to the next TARGET opcode, `G`
     ///
     /// A search for the subsequent TARGET opcode is done at the time the SPTGT
@@ -108,7 +114,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = no change
     /// ```
-    SpTgt,
+    SpTgt = op_codes::SPTGT as isize,
     /// Push the NZ flag, `P`
     ///
     /// ```ignore
@@ -117,7 +123,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = no change
     /// ```
-    PushNz,
+    PushNz = op_codes::PUSHNZ as isize,
     /// Swap the top two items on the stack, `S`
     ///
     /// ```ignore
@@ -127,7 +133,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = no change
     /// ```
-    Swap,
+    Swap = op_codes::SWAP as isize,
     /// Push a zero onto the stack, `0`
     ///
     /// ```ignore
@@ -136,7 +142,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = false
     /// ```
-    Push0,
+    Push0 = op_codes::PUSH0 as isize,
     /// Add the top two stacked words, push the result, `+`
     ///
     /// ```ignore
@@ -145,7 +151,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = true if the result is nonzero, else false
     /// ```
-    Add,
+    Add = op_codes::ADD as isize,
     /// Subtract the top two stacked words and push the result, `-`
     ///
     /// ```ignore
@@ -154,7 +160,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = true if the result is nonzero, else false
     /// ```
-    Sub,
+    Sub = op_codes::SUB as isize,
     /// Increment the item at the top of the stack, `.`
     ///
     /// ```ignore
@@ -162,7 +168,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = true if the result is nonzero, else false
     /// ```
-    Inc,
+    Inc = op_codes::INC as isize,
     /// Decrement the item on the top of the stack, `,`
     ///
     /// ```ignore
@@ -170,7 +176,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = true if the result is nonzero, else false
     /// ```
-    Dec,
+    Dec = op_codes::DEC as isize,
     /// Multiply the top two stacked words and push the result, `*`
     ///
     /// ```ignore
@@ -178,7 +184,7 @@ pub enum Instruction {
     /// *SP= (*(SP + 2 mod L) * (*(SP + 1 mod L)) trunc W PC = PC + 1 mod L
     /// NZ = true if the result is nonzero, else false
     /// ```
-    Mul,
+    Mul = op_codes::MUL as isize,
     /// Pop two words, divide, push the quotient and remainder, `/`
     ///
     /// If the divisor is zero, the quotient will be the maximum possible word value, and the remainder zero.
@@ -191,7 +197,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = true if the quotient is nonzero, else false
     /// ```
-    Div,
+    Div = op_codes::DIV as isize,
     /// Bitwise XOR the top two stacked words and push the result, `^`
     ///
     /// ```ignore
@@ -200,7 +206,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = true if the result is nonzero, else false
     /// ```
-    Xor,
+    Xor = op_codes::XOR as isize,
     /// Bitwise AND the top two stacked words and push the result, `&`
     ///
     /// ```ignore
@@ -209,7 +215,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = true if the result is nonzero, else false
     /// ```
-    And,
+    And = op_codes::AND as isize,
     /// Bitwise OR the top two stacked words and push the result, `|`
     ///
     /// ```ignore
@@ -218,7 +224,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = true if the result is nonzero, else false
     /// ```
-    Or,
+    Or = op_codes::OR as isize,
     /// Logical shift left, `(`
     ///
     /// ```ignore
@@ -226,7 +232,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = true if the result is nonzero, else false
     /// ```
-    Shl,
+    Shl = op_codes::SHL as isize,
     /// Logical shift right, `)`
     ///
     /// ```ignore
@@ -234,7 +240,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = true if the result is nonzero, else false
     /// ```
-    Shr,
+    Shr = op_codes::SHR as isize,
     /// Bitwise NOT, `~`
     ///
     /// ```ignore
@@ -242,7 +248,7 @@ pub enum Instruction {
     /// PC = PC + 1 mod L
     /// NZ = true if the result is nonzero, else false
     /// ```
-    Not,
+    Not = op_codes::NOT as isize,
     /// Branch if zero (NZ flag is false), `Z`
     ///
     /// Skips one opcode if NZ is false.
@@ -254,7 +260,7 @@ pub enum Instruction {
     ///     PC = PC + 1 mod L
     /// SP = no change NZ = no change
     /// ```
-    Bz,
+    Bz = op_codes::BZ as isize,
     /// Branch if nonzero (NZ flag is true), `z`
     ///
     /// Skips one opcode if NZ is true.
@@ -266,7 +272,7 @@ pub enum Instruction {
     ///     PC = PC + 1 mod L
     /// SP = no change NZ = no change
     /// ```
-    Bnz,
+    Bnz = op_codes::BNZ as isize,
     /// Compare top two stacked words, branch if equal, `=`
     ///
     /// ```ignore
@@ -276,7 +282,7 @@ pub enum Instruction {
     ///     PC = PC + 1 mod L
     /// SP = no change NZ = no change
     /// ```
-    Beq,
+    Beq = op_codes::BEQ as isize,
     /// Compare top two stacked words, branch if greater than, `>`
     ///
     /// ```ignore
@@ -286,7 +292,7 @@ pub enum Instruction {
     ///     PC = PC + 1 mod L
     /// SP = no change NZ = no change
     /// ```
-    Bgt,
+    Bgt = op_codes::BGT as isize,
     /// Compare top two stacked words, branch if less than, `{`
     ///
     /// ```ignore
@@ -296,7 +302,7 @@ pub enum Instruction {
     ///     PC = PC + 1 mod L
     /// SP = no change NZ = no change
     /// ```
-    Blt,
+    Blt = op_codes::BLT as isize,
     /// Compare top two stacked words, branch if greater than or equal, `}`
     ///
     /// ```ignore
@@ -306,7 +312,7 @@ pub enum Instruction {
     ///     PC = PC + 1 mod L
     /// SP = no change NZ = no change
     /// ```
-    Bge,
+    Bge = op_codes::BGE as isize,
     /// Repeat the following instructions up to the next ENDL, `L`
     ///
     /// ```ignore
@@ -314,7 +320,7 @@ pub enum Instruction {
     /// SP = no change
     /// NZ = no change
     /// ```
-    Loop,
+    Loop = op_codes::LOOP as isize,
     /// End of LOOP, `]`
     ///
     /// Execution resumes at the instruction following the preceding LOOP opcode.
@@ -330,7 +336,7 @@ pub enum Instruction {
     ///     PC = PC + 1 mod L
     /// SP = no change NZ = no change
     /// ```
-    EndL,
+    EndL = op_codes::ENDL as isize,
     /// Branch to the next TARGET opcode, `B`
     ///
     /// A search for the subsequent TARGET opcode is done at the time the BRAN instruction is encountered,
@@ -346,7 +352,7 @@ pub enum Instruction {
     ///     PC = PC + 1 mod L
     /// SP = no change NZ = no change
     /// ```
-    BraN,
+    BraN = op_codes::BRAN as isize,
     /// Branch to the previous TARGET opcode, `b`
     ///
     /// A search for the previous TARGET opcode is done at the time the BRAP instruction is encountered,
@@ -361,7 +367,7 @@ pub enum Instruction {
     ///     PC = PC + 1 mod L
     /// SP = no change NZ = no change
     /// ```
-    BraP,
+    BraP = op_codes::BRAP as isize,
     /// Branch target for BRAN and BRAP, `T`
     ///
     /// See SPTGT, BRAN, and BRAP instructions for the semantics.
@@ -372,7 +378,7 @@ pub enum Instruction {
     /// SP = no change
     /// NZ = no change
     /// ```
-    Target,
+    Target = op_codes::TARGET as isize,
     /// Skip one instruction, `1`
     ///
     /// ```ignore
@@ -380,7 +386,7 @@ pub enum Instruction {
     /// SP = no change
     /// NZ = no change
     /// ```
-    Skip1,
+    Skip1 = op_codes::SKIP1 as isize,
     /// Skip two instructions, `2`
     ///
     /// ```ignore
@@ -388,7 +394,7 @@ pub enum Instruction {
     /// SP = no change
     /// NZ = no change
     /// ```
-    Skip2,
+    Skip2 = op_codes::SKIP2 as isize,
     /// Skip three instructions, `3`
     ///
     /// ```ignore
@@ -396,7 +402,7 @@ pub enum Instruction {
     /// SP = no change
     /// NZ = no change
     /// ```
-    Skip3,
+    Skip3 = op_codes::SKIP3 as isize,
     /// Skip four instructions, `4`
     ///
     /// ```ignore
@@ -404,7 +410,7 @@ pub enum Instruction {
     /// SP = no change
     /// NZ = no change
     /// ```
-    Skip4,
+    Skip4 = op_codes::SKIP4 as isize,
     /// Skip five instructions, `5`
     ///
     /// ```ignore
@@ -412,7 +418,7 @@ pub enum Instruction {
     /// SP = no change
     /// NZ = no change
     /// ```
-    Skip5,
+    Skip5 = op_codes::SKIP5 as isize,
     /// Skip five instructions, `6`
     ///
     /// ```ignore
@@ -420,7 +426,7 @@ pub enum Instruction {
     /// SP = no change
     /// NZ = no change
     /// ```
-    Skip6,
+    Skip6 = op_codes::SKIP6 as isize,
     /// Skip five instructions, `7`
     ///
     /// ```ignore
@@ -428,7 +434,7 @@ pub enum Instruction {
     /// SP = no change
     /// NZ = no change
     /// ```
-    Skip7,
+    Skip7 = op_codes::SKIP7 as isize,
     /// Skip five instructions, `8`
     ///
     /// ```ignore
@@ -436,7 +442,7 @@ pub enum Instruction {
     /// SP = no change
     /// NZ = no change
     /// ```
-    Skip8,
+    Skip8 = op_codes::SKIP8 as isize,
     /// Skip five instructions, `9`
     ///
     /// ```ignore
@@ -444,278 +450,172 @@ pub enum Instruction {
     /// SP = no change
     /// NZ = no change
     /// ```
-    Skip9,
+    Skip9 = op_codes::SKIP9 as isize,
 }
 
 use self::Instruction::*;
 
-// impl From<char> for Instruction {
-//     fn from(c: char) -> Self {
-//         match c { // FIXME: Really fucking ugly
-//             c if c == Reset.into()  => Reset,
-//             c if c == Halt.into()   => Halt,
-//             c if c == In.into()     => In,
-//             c if c == Out.into()    => Out,
-//             c if c == Pop.into()    => Pop,
-//             c if c == Dup.into()    => Dup,
-//             c if c == PushPc.into() => PushPc,
-//             c if c == PopPc.into()  => PopPc,
-//             c if c == PopSp.into()  => PopSp,
-//             c if c == SpTgt.into()  => SpTgt,
-//             c if c == PushNz.into() => PushNz,
-//             c if c == Swap.into()   => Swap,
-//             c if c == Push0.into()  => Push0,
-//             c if c == Add.into()    => Add,
-//             c if c == Sub.into()    => Sub,
-//             c if c == Inc.into()    => Inc,
-//             c if c == Dec.into()    => Dec,
-//             c if c == Mul.into()    => Mul,
-//             c if c == Div.into()    => Div,
-//             c if c == Xor.into()    => Xor,
-//             c if c == And.into()    => And,
-//             c if c == Or.into()     => Or,
-//             c if c == Shl.into()    => Shl,
-//             c if c == Shr.into()    => Shr,
-//             c if c == Not.into()    => Not,
-//             c if c == Bz.into()     => Bz,
-//             c if c == Bnz.into()    => Bnz,
-//             c if c == Beq.into()    => Beq,
-//             c if c == Bgt.into()    => Bgt,
-//             c if c == Blt.into()    => Blt,
-//             c if c == Bge.into()    => Bge,
-//             c if c == Loop.into()   => Loop,
-//             c if c == EndL.into()   => EndL,
-//             c if c == BraN.into()   => BraN,
-//             c if c == BraP.into()   => BraP,
-//             c if c == Target.into() => Target,
-//             c if c == Skip1.into()  => Skip1,
-//             c if c == Skip2.into()  => Skip2,
-//             c if c == Skip3.into()  => Skip3,
-//             c if c == Skip4.into()  => Skip4,
-//             c if c == Skip5.into()  => Skip5,
-//             c if c == Skip6.into()  => Skip6,
-//             c if c == Skip7.into()  => Skip7,
-//             c if c == Skip8.into()  => Skip8,
-//             c if c == Skip9.into()  => Skip9,
-//             _                       => Nop,
-//         }
-//     }
-// }
-
-impl From<char> for Instruction {
-    fn from(c: char) -> Self {
+impl From<Mnemonic> for Instruction {
+    fn from(c: Mnemonic) -> Self {
         match c {
-           'R' => Reset,
-           'H' => Halt,
-           'I' => In,
-           'O' => Out,
-           'p' => Pop,
-           'D' => Dup,
-           'C' => PushPc,
-           'c' => PopPc,
-           'Y' => PopSp,
-           'G' => SpTgt,
-           'P' => PushNz,
-           'S' => Swap,
-           '0' => Push0,
-           '+' => Add,
-           '-' => Sub,
-           '.' => Inc,
-           ',' => Dec,
-           '*' => Mul,
-           '/' => Div,
-           '^' => Xor,
-           '&' => And,
-           '|' => Or,
-           '(' => Shl,
-           ')' => Shr,
-           '~' => Not,
-           'Z' => Bz,
-           'z' => Bnz,
-           '=' => Beq,
-           '>' => Bgt,
-           '{' => Blt,
-           '}' => Bge,
-           'L' => Loop,
-           ']' => EndL,
-           'B' => BraN,
-           'b' => BraP,
-           'T' => Target,
-           '1' => Skip1,
-           '2' => Skip2,
-           '3' => Skip3,
-           '4' => Skip4,
-           '5' => Skip5,
-           '6' => Skip6,
-           '7' => Skip7,
-           '8' => Skip8,
-           '9' => Skip9,
-           ';' | _ => Nop,
+           mnemonics::RESET  => Reset,
+           mnemonics::HALT   => Halt,
+           mnemonics::IN     => In,
+           mnemonics::OUT    => Out,
+           mnemonics::POP    => Pop,
+           mnemonics::DUP    => Dup,
+           mnemonics::PUSHPC => PushPc,
+           mnemonics::POPPC  => PopPc,
+           mnemonics::POPSP  => PopSp,
+           mnemonics::SPTGT  => SpTgt,
+           mnemonics::PUSHNZ => PushNz,
+           mnemonics::SWAP   => Swap,
+           mnemonics::PUSH0  => Push0,
+           mnemonics::ADD    => Add,
+           mnemonics::SUB    => Sub,
+           mnemonics::INC    => Inc,
+           mnemonics::DEC    => Dec,
+           mnemonics::MUL    => Mul,
+           mnemonics::DIV    => Div,
+           mnemonics::XOR    => Xor,
+           mnemonics::AND    => And,
+           mnemonics::OR     => Or,
+           mnemonics::SHL    => Shl,
+           mnemonics::SHR    => Shr,
+           mnemonics::NOT    => Not,
+           mnemonics::BZ     => Bz,
+           mnemonics::BNZ    => Bnz,
+           mnemonics::BEQ    => Beq,
+           mnemonics::BGT    => Bgt,
+           mnemonics::BLT    => Blt,
+           mnemonics::BGE    => Bge,
+           mnemonics::LOOP   => Loop,
+           mnemonics::ENDL   => EndL,
+           mnemonics::BRAN   => BraN,
+           mnemonics::BRAP   => BraP,
+           mnemonics::TARGET => Target,
+           mnemonics::SKIP1  => Skip1,
+           mnemonics::SKIP2  => Skip2,
+           mnemonics::SKIP3  => Skip3,
+           mnemonics::SKIP4  => Skip4,
+           mnemonics::SKIP5  => Skip5,
+           mnemonics::SKIP6  => Skip6,
+           mnemonics::SKIP7  => Skip7,
+           mnemonics::SKIP8  => Skip8,
+           mnemonics::SKIP9  => Skip9,
+           mnemonics::NOP | _ => Nop,
         }
     }
 }
 
-impl From<Instruction> for char {
+impl From<Instruction> for Mnemonic {
     fn from(i: Instruction) -> Self {
         match i {
-            Nop    => ';',
-            Reset  => 'R',
-            Halt   => 'H',
-            In     => 'I',
-            Out    => 'O',
-            Pop    => 'p',
-            Dup    => 'D',
-            PushPc => 'C',
-            PopPc  => 'c',
-            PopSp  => 'Y',
-            SpTgt  => 'G',
-            PushNz => 'P',
-            Swap   => 'S',
-            Push0  => '0',
-            Add    => '+',
-            Sub    => '-',
-            Inc    => '.',
-            Dec    => ',',
-            Mul    => '*',
-            Div    => '/',
-            Xor    => '^',
-            And    => '&',
-            Or     => '|',
-            Shl    => '(',
-            Shr    => ')',
-            Not    => '~',
-            Bz     => 'Z',
-            Bnz    => 'z',
-            Beq    => '=',
-            Bgt    => '>',
-            Blt    => '{',
-            Bge    => '}',
-            Loop   => 'L',
-            EndL   => ']',
-            BraN   => 'B',
-            BraP   => 'b',
-            Target => 'T',
-            Skip1  => '1',
-            Skip2  => '2',
-            Skip3  => '3',
-            Skip4  => '4',
-            Skip5  => '5',
-            Skip6  => '6',
-            Skip7  => '7',
-            Skip8  => '8',
-            Skip9  => '9',
+            Nop    => mnemonics::NOP,
+            Reset  => mnemonics::RESET,
+            Halt   => mnemonics::HALT,
+            In     => mnemonics::IN,
+            Out    => mnemonics::OUT,
+            Pop    => mnemonics::POP,
+            Dup    => mnemonics::DUP,
+            PushPc => mnemonics::PUSHPC,
+            PopPc  => mnemonics::POPPC,
+            PopSp  => mnemonics::POPSP,
+            SpTgt  => mnemonics::SPTGT,
+            PushNz => mnemonics::PUSHNZ,
+            Swap   => mnemonics::SWAP,
+            Push0  => mnemonics::PUSH0,
+            Add    => mnemonics::ADD,
+            Sub    => mnemonics::SUB,
+            Inc    => mnemonics::INC,
+            Dec    => mnemonics::DEC,
+            Mul    => mnemonics::MUL,
+            Div    => mnemonics::DIV,
+            Xor    => mnemonics::XOR,
+            And    => mnemonics::AND,
+            Or     => mnemonics::OR,
+            Shl    => mnemonics::SHL,
+            Shr    => mnemonics::SHR,
+            Not    => mnemonics::NOT,
+            Bz     => mnemonics::BZ,
+            Bnz    => mnemonics::BNZ,
+            Beq    => mnemonics::BEQ,
+            Bgt    => mnemonics::BGT,
+            Blt    => mnemonics::BLT,
+            Bge    => mnemonics::BGE,
+            Loop   => mnemonics::LOOP,
+            EndL   => mnemonics::ENDL,
+            BraN   => mnemonics::BRAN,
+            BraP   => mnemonics::BRAP,
+            Target => mnemonics::TARGET,
+            Skip1  => mnemonics::SKIP1,
+            Skip2  => mnemonics::SKIP2,
+            Skip3  => mnemonics::SKIP3,
+            Skip4  => mnemonics::SKIP4,
+            Skip5  => mnemonics::SKIP5,
+            Skip6  => mnemonics::SKIP6,
+            Skip7  => mnemonics::SKIP7,
+            Skip8  => mnemonics::SKIP8,
+            Skip9  => mnemonics::SKIP9,
         }
     }
 }
 
-// impl From<u8> for Instruction {
-//     fn from(c: u8) -> Self {
-//         match c { // FIXME: Really fucking ugly
-//             c if c == Reset.into()  => Reset,
-//             c if c == Halt.into()   => Halt,
-//             c if c == In.into()     => In,
-//             c if c == Out.into()    => Out,
-//             c if c == Pop.into()    => Pop,
-//             c if c == Dup.into()    => Dup,
-//             c if c == PushPc.into() => PushPc,
-//             c if c == PopPc.into()  => PopPc,
-//             c if c == PopSp.into()  => PopSp,
-//             c if c == SpTgt.into()  => SpTgt,
-//             c if c == PushNz.into() => PushNz,
-//             c if c == Swap.into()   => Swap,
-//             c if c == Push0.into()  => Push0,
-//             c if c == Add.into()    => Add,
-//             c if c == Sub.into()    => Sub,
-//             c if c == Inc.into()    => Inc,
-//             c if c == Dec.into()    => Dec,
-//             c if c == Mul.into()    => Mul,
-//             c if c == Div.into()    => Div,
-//             c if c == Xor.into()    => Xor,
-//             c if c == And.into()    => And,
-//             c if c == Or.into()     => Or,
-//             c if c == Shl.into()    => Shl,
-//             c if c == Shr.into()    => Shr,
-//             c if c == Not.into()    => Not,
-//             c if c == Bz.into()     => Bz,
-//             c if c == Bnz.into()    => Bnz,
-//             c if c == Beq.into()    => Beq,
-//             c if c == Bgt.into()    => Bgt,
-//             c if c == Blt.into()    => Blt,
-//             c if c == Bge.into()    => Bge,
-//             c if c == Loop.into()   => Loop,
-//             c if c == EndL.into()   => EndL,
-//             c if c == BraN.into()   => BraN,
-//             c if c == BraP.into()   => BraP,
-//             c if c == Target.into() => Target,
-//             c if c == Skip1.into()  => Skip1,
-//             c if c == Skip2.into()  => Skip2,
-//             c if c == Skip3.into()  => Skip3,
-//             c if c == Skip4.into()  => Skip4,
-//             c if c == Skip5.into()  => Skip5,
-//             c if c == Skip6.into()  => Skip6,
-//             c if c == Skip7.into()  => Skip7,
-//             c if c == Skip8.into()  => Skip8,
-//             c if c == Skip9.into()  => Skip9,
-//             _                       => Nop,
-//         }
-//     }
-// }
-
-impl From<u8> for Instruction {
-    fn from(c: u8) -> Self {
+impl From<OpCode> for Instruction {
+    fn from(c: OpCode) -> Self {
         match c {
-            1 => Reset,
-            2 => Halt,
-            3 => In,
-            4 => Out,
-            5 => Pop,
-            6 => Dup,
-            7 => PushPc,
-            8 => PopPc,
-            9 => PopSp,
-            10 => SpTgt,
-            11 => PushNz,
-            12 => Swap,
-            13 => Push0,
-            14 => Add,
-            15 => Sub,
-            16 => Inc,
-            17 => Dec,
-            18 => Mul,
-            19 => Div,
-            20 => Xor,
-            21 => And,
-            22 => Or,
-            23 => Shl,
-            24 => Shr,
-            25 => Not,
-            26 => Bz,
-            27 => Bnz,
-            28 => Beq,
-            29 => Bgt,
-            30 => Blt,
-            31 => Bge,
-            32 => Loop,
-            33 => EndL,
-            34 => BraN,
-            35 => BraP,
-            36 => Target,
-            37 => Skip1,
-            38 => Skip2,
-            39 => Skip3,
-            40 => Skip4,
-            41 => Skip5,
-            42 => Skip6,
-            43 => Skip7,
-            44 => Skip8,
-            45 => Skip9,
-            0 | _ => Nop,
+            op_codes::RESET  => Reset,
+            op_codes::HALT   => Halt,
+            op_codes::IN     => In,
+            op_codes::OUT    => Out,
+            op_codes::POP    => Pop,
+            op_codes::DUP    => Dup,
+            op_codes::PUSHPC => PushPc,
+            op_codes::POPPC  => PopPc,
+            op_codes::POPSP  => PopSp,
+            op_codes::SPTGT  => SpTgt,
+            op_codes::PUSHNZ => PushNz,
+            op_codes::SWAP   => Swap,
+            op_codes::PUSH0  => Push0,
+            op_codes::ADD    => Add,
+            op_codes::SUB    => Sub,
+            op_codes::INC    => Inc,
+            op_codes::DEC    => Dec,
+            op_codes::MUL    => Mul,
+            op_codes::DIV    => Div,
+            op_codes::XOR    => Xor,
+            op_codes::AND    => And,
+            op_codes::OR     => Or,
+            op_codes::SHL    => Shl,
+            op_codes::SHR    => Shr,
+            op_codes::NOT    => Not,
+            op_codes::BZ     => Bz,
+            op_codes::BNZ    => Bnz,
+            op_codes::BEQ    => Beq,
+            op_codes::BGT    => Bgt,
+            op_codes::BLT    => Blt,
+            op_codes::BGE    => Bge,
+            op_codes::LOOP   => Loop,
+            op_codes::ENDL   => EndL,
+            op_codes::BRAN   => BraN,
+            op_codes::BRAP   => BraP,
+            op_codes::TARGET => Target,
+            op_codes::SKIP1  => Skip1,
+            op_codes::SKIP2  => Skip2,
+            op_codes::SKIP3  => Skip3,
+            op_codes::SKIP4  => Skip4,
+            op_codes::SKIP5  => Skip5,
+            op_codes::SKIP6  => Skip6,
+            op_codes::SKIP7  => Skip7,
+            op_codes::SKIP8  => Skip8,
+            op_codes::SKIP9  => Skip9,
+            op_codes::NOP | _ => Nop,
         }
     }
 }
 
-impl From<Instruction> for u8 {
+impl From<Instruction> for OpCode {
     fn from(i: Instruction) -> Self {
-        i as u8
+        i as OpCode
     }
 }

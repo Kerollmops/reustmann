@@ -22,6 +22,7 @@ pub enum Instruction {
     /// NZ = no change
     /// ```
     Nop = op_codes::NOP as isize,
+
     /// Reset, `R`
     ///
     /// ```ignore
@@ -30,10 +31,12 @@ pub enum Instruction {
     /// NZ = false
     /// ```
     Reset = op_codes::RESET as isize,
+
     /// Halt program execution, `H`
     ///
     /// Causes program execution to stop.
     Halt = op_codes::HALT as isize,
+
     /// Input a char from stdin, push it onto the stack, `I`
     ///
     /// ```ignore
@@ -43,6 +46,7 @@ pub enum Instruction {
     /// NZ = true if the result stacked is nonzero, else false
     /// ```
     In = op_codes::IN as isize,
+
     /// Pop a word from the stack, output to stdout, `O`
     ///
     /// If the value on the top of the stack is outside the range of a char,
@@ -56,6 +60,7 @@ pub enum Instruction {
     /// NZ = true if the character output is nonzero, else false
     /// ```
     Out = op_codes::OUT as isize,
+
     /// Pop a word from the stack, `p`
     ///
     /// ```ignore
@@ -64,6 +69,7 @@ pub enum Instruction {
     /// NZ = true if the item popped is nonzero, else false
     /// ```
     Pop = op_codes::POP as isize,
+
     /// Duplicate the last stacked value, `D`
     ///
     /// ```ignore
@@ -74,6 +80,7 @@ pub enum Instruction {
     /// NZ = true if the value duplicated is nonzero, else false
     /// ```
     Dup = op_codes::DUP as isize,
+
     /// Push the PC onto the stack, `C`
     ///
     /// ```ignore
@@ -83,6 +90,7 @@ pub enum Instruction {
     /// NZ = no change
     /// ```
     PushPc = op_codes::PUSHPC as isize,
+
     /// Pop the PC from the stack, `c`
     ///
     /// ```ignore
@@ -91,6 +99,7 @@ pub enum Instruction {
     /// NZ = no change
     /// ```
     PopPc = op_codes::POPPC as isize,
+
     /// Pop the SP from the stack, `Y`
     ///
     /// ```ignore
@@ -99,6 +108,7 @@ pub enum Instruction {
     /// NZ = no change
     /// ```
     PopSp = op_codes::POPSP as isize,
+
     /// Set the SP to the next TARGET opcode, `G`
     ///
     /// A search for the subsequent TARGET opcode is done at the time the SPTGT
@@ -115,6 +125,7 @@ pub enum Instruction {
     /// NZ = no change
     /// ```
     SpTgt = op_codes::SPTGT as isize,
+
     /// Push the NZ flag, `P`
     ///
     /// ```ignore
@@ -124,6 +135,7 @@ pub enum Instruction {
     /// NZ = no change
     /// ```
     PushNz = op_codes::PUSHNZ as isize,
+
     /// Swap the top two items on the stack, `S`
     ///
     /// ```ignore
@@ -134,6 +146,7 @@ pub enum Instruction {
     /// NZ = no change
     /// ```
     Swap = op_codes::SWAP as isize,
+
     /// Push a zero onto the stack, `0`
     ///
     /// ```ignore
@@ -143,6 +156,7 @@ pub enum Instruction {
     /// NZ = false
     /// ```
     Push0 = op_codes::PUSH0 as isize,
+
     /// Add the top two stacked words, push the result, `+`
     ///
     /// ```ignore
@@ -152,6 +166,7 @@ pub enum Instruction {
     /// NZ = true if the result is nonzero, else false
     /// ```
     Add = op_codes::ADD as isize,
+
     /// Subtract the top two stacked words and push the result, `-`
     ///
     /// ```ignore
@@ -161,6 +176,7 @@ pub enum Instruction {
     /// NZ = true if the result is nonzero, else false
     /// ```
     Sub = op_codes::SUB as isize,
+
     /// Increment the item at the top of the stack, `.`
     ///
     /// ```ignore
@@ -169,6 +185,7 @@ pub enum Instruction {
     /// NZ = true if the result is nonzero, else false
     /// ```
     Inc = op_codes::INC as isize,
+
     /// Decrement the item on the top of the stack, `,`
     ///
     /// ```ignore
@@ -177,6 +194,7 @@ pub enum Instruction {
     /// NZ = true if the result is nonzero, else false
     /// ```
     Dec = op_codes::DEC as isize,
+
     /// Multiply the top two stacked words and push the result, `*`
     ///
     /// ```ignore
@@ -185,6 +203,7 @@ pub enum Instruction {
     /// NZ = true if the result is nonzero, else false
     /// ```
     Mul = op_codes::MUL as isize,
+
     /// Pop two words, divide, push the quotient and remainder, `/`
     ///
     /// If the divisor is zero, the quotient will be the maximum possible word value, and the remainder zero.
@@ -198,6 +217,7 @@ pub enum Instruction {
     /// NZ = true if the quotient is nonzero, else false
     /// ```
     Div = op_codes::DIV as isize,
+
     /// Bitwise XOR the top two stacked words and push the result, `^`
     ///
     /// ```ignore
@@ -207,6 +227,7 @@ pub enum Instruction {
     /// NZ = true if the result is nonzero, else false
     /// ```
     Xor = op_codes::XOR as isize,
+
     /// Bitwise AND the top two stacked words and push the result, `&`
     ///
     /// ```ignore
@@ -216,6 +237,7 @@ pub enum Instruction {
     /// NZ = true if the result is nonzero, else false
     /// ```
     And = op_codes::AND as isize,
+
     /// Bitwise OR the top two stacked words and push the result, `|`
     ///
     /// ```ignore
@@ -225,6 +247,7 @@ pub enum Instruction {
     /// NZ = true if the result is nonzero, else false
     /// ```
     Or = op_codes::OR as isize,
+
     /// Logical shift left, `(`
     ///
     /// ```ignore
@@ -233,6 +256,7 @@ pub enum Instruction {
     /// NZ = true if the result is nonzero, else false
     /// ```
     Shl = op_codes::SHL as isize,
+
     /// Logical shift right, `)`
     ///
     /// ```ignore
@@ -241,6 +265,7 @@ pub enum Instruction {
     /// NZ = true if the result is nonzero, else false
     /// ```
     Shr = op_codes::SHR as isize,
+
     /// Bitwise NOT, `~`
     ///
     /// ```ignore
@@ -249,6 +274,7 @@ pub enum Instruction {
     /// NZ = true if the result is nonzero, else false
     /// ```
     Not = op_codes::NOT as isize,
+
     /// Branch if zero (NZ flag is false), `Z`
     ///
     /// Skips one opcode if NZ is false.
@@ -261,6 +287,7 @@ pub enum Instruction {
     /// SP = no change NZ = no change
     /// ```
     Bz = op_codes::BZ as isize,
+
     /// Branch if nonzero (NZ flag is true), `z`
     ///
     /// Skips one opcode if NZ is true.
@@ -273,6 +300,7 @@ pub enum Instruction {
     /// SP = no change NZ = no change
     /// ```
     Bnz = op_codes::BNZ as isize,
+
     /// Compare top two stacked words, branch if equal, `=`
     ///
     /// ```ignore
@@ -283,6 +311,7 @@ pub enum Instruction {
     /// SP = no change NZ = no change
     /// ```
     Beq = op_codes::BEQ as isize,
+
     /// Compare top two stacked words, branch if greater than, `>`
     ///
     /// ```ignore
@@ -293,6 +322,7 @@ pub enum Instruction {
     /// SP = no change NZ = no change
     /// ```
     Bgt = op_codes::BGT as isize,
+
     /// Compare top two stacked words, branch if less than, `{`
     ///
     /// ```ignore
@@ -303,6 +333,7 @@ pub enum Instruction {
     /// SP = no change NZ = no change
     /// ```
     Blt = op_codes::BLT as isize,
+
     /// Compare top two stacked words, branch if greater than or equal, `}`
     ///
     /// ```ignore
@@ -313,6 +344,7 @@ pub enum Instruction {
     /// SP = no change NZ = no change
     /// ```
     Bge = op_codes::BGE as isize,
+
     /// Repeat the following instructions up to the next ENDL, `L`
     ///
     /// ```ignore
@@ -321,6 +353,7 @@ pub enum Instruction {
     /// NZ = no change
     /// ```
     Loop = op_codes::LOOP as isize,
+
     /// End of LOOP, `]`
     ///
     /// Execution resumes at the instruction following the preceding LOOP opcode.
@@ -337,6 +370,7 @@ pub enum Instruction {
     /// SP = no change NZ = no change
     /// ```
     EndL = op_codes::ENDL as isize,
+
     /// Branch to the next TARGET opcode, `B`
     ///
     /// A search for the subsequent TARGET opcode is done at the time the BRAN instruction is encountered,
@@ -353,6 +387,7 @@ pub enum Instruction {
     /// SP = no change NZ = no change
     /// ```
     BraN = op_codes::BRAN as isize,
+
     /// Branch to the previous TARGET opcode, `b`
     ///
     /// A search for the previous TARGET opcode is done at the time the BRAP instruction is encountered,
@@ -368,6 +403,7 @@ pub enum Instruction {
     /// SP = no change NZ = no change
     /// ```
     BraP = op_codes::BRAP as isize,
+
     /// Branch target for BRAN and BRAP, `T`
     ///
     /// See SPTGT, BRAN, and BRAP instructions for the semantics.
@@ -379,6 +415,7 @@ pub enum Instruction {
     /// NZ = no change
     /// ```
     Target = op_codes::TARGET as isize,
+
     /// Skip one instruction, `1`
     ///
     /// ```ignore
@@ -387,6 +424,7 @@ pub enum Instruction {
     /// NZ = no change
     /// ```
     Skip1 = op_codes::SKIP1 as isize,
+
     /// Skip two instructions, `2`
     ///
     /// ```ignore
@@ -395,6 +433,7 @@ pub enum Instruction {
     /// NZ = no change
     /// ```
     Skip2 = op_codes::SKIP2 as isize,
+
     /// Skip three instructions, `3`
     ///
     /// ```ignore
@@ -403,6 +442,7 @@ pub enum Instruction {
     /// NZ = no change
     /// ```
     Skip3 = op_codes::SKIP3 as isize,
+
     /// Skip four instructions, `4`
     ///
     /// ```ignore
@@ -411,6 +451,7 @@ pub enum Instruction {
     /// NZ = no change
     /// ```
     Skip4 = op_codes::SKIP4 as isize,
+
     /// Skip five instructions, `5`
     ///
     /// ```ignore
@@ -419,6 +460,7 @@ pub enum Instruction {
     /// NZ = no change
     /// ```
     Skip5 = op_codes::SKIP5 as isize,
+
     /// Skip five instructions, `6`
     ///
     /// ```ignore
@@ -427,6 +469,7 @@ pub enum Instruction {
     /// NZ = no change
     /// ```
     Skip6 = op_codes::SKIP6 as isize,
+
     /// Skip five instructions, `7`
     ///
     /// ```ignore
@@ -435,6 +478,7 @@ pub enum Instruction {
     /// NZ = no change
     /// ```
     Skip7 = op_codes::SKIP7 as isize,
+
     /// Skip five instructions, `8`
     ///
     /// ```ignore
@@ -443,6 +487,7 @@ pub enum Instruction {
     /// NZ = no change
     /// ```
     Skip8 = op_codes::SKIP8 as isize,
+
     /// Skip five instructions, `9`
     ///
     /// ```ignore

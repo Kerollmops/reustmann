@@ -13,108 +13,145 @@ pub enum Statement {
     // other ideas ???
 }
 
+use self::Statement::{Success, HaltInstruction};
+
 /// The main interpreter, execute instructions, read from input,
 /// write to output
-pub struct Interpreter<'a, R: Read + 'a, W: Write + 'a> {
-    input: &'a R,
-    output: &'a W,
-    memory: Vec<u8>, // need to be on the stack
-    word_size: usize,
+pub struct Interpreter {
+    arch_width: u8, // [6..32)
+    memory: Vec<OpCode>, // [1..2^64)
     pc: usize,
     sp: usize,
     nz: bool
 }
 
-impl<'a, R: Read, W: Write> Interpreter<'a, R, W> {
+impl Interpreter {
     /// Construct a new Interpreter with an existing Program.
-    ///
-    /// Use [Empty](https://doc.rust-lang.org/std/io/struct.Empty.html) if you don't want to give input.
-    ///
-    /// Use [Sink](https://doc.rust-lang.org/std/io/struct.Sink.html) if you don't want to output data.
-    pub fn new(program: &Program, input: &'a mut R, output: &'a mut W) -> Interpreter<'a, R, W> {
-        let mut memory = Vec::with_capacity(program.instructions().len());
-        for i in program.instructions() {
-            memory.push((*i).into());
+    pub fn new(arch_length: usize, arch_width: usize) -> Result<Interpreter, &'static str> {
+        if arch_length == 0 || arch_length > 2_usize.pow(64) { // FIXME: precomputed ?
+            return Err("Arch length need to be in the range [1..2^64)");
         }
-        Interpreter {
-            input: input,
-            output: output,
+        if arch_width < 6 || arch_width > 32 {
+            return Err("Arch width need to be in the range [6..32)");
+        }
+        let mut memory = Vec::with_capacity(arch_length);
+        for i in memory.iter_mut() {
+            *i = NOP;
+        }
+        Ok(Interpreter {
+            arch_width: arch_width as u8,
             memory: memory,
-            word_size: program.word_size(),
             pc: 0,
             sp: 0,
             nz: false
+        })
+    }
+
+    /// copy your program in the memory of the machine
+    pub fn copy_program(&mut self, program: &Program) -> Result<(), &'static str> {
+        let program = &program.instructions();
+        if program.len() > self.memory.len() {
+            return Err("Program len is bigger than memory len");
         }
+        for i in 0..program.len() {
+            self.memory[i] = program[i].into();
+        }
+        Ok(())
     }
 
-    /// get the memory of the machine at any step
-    pub fn memory(&self) -> &[u8] {
-        &self.memory
+    /// reset pc, sp and nz to 0, 0 and false
+    #[inline]
+    pub fn reset(&mut self) -> Statement {
+        self.pc = 0;
+        self.sp = 0;
+        self.nz = false;
+        Success
     }
 
     #[inline]
-    fn increment_pc_n(&mut self, n: usize) {
+    fn increment_pc_n(&mut self, n: usize) -> Statement {
         self.pc = self.pc.wrapping_add(n) % self.memory.len();
+        Success
     }
 
     #[inline]
-    fn inscrement_pc(&mut self) {
-        self.increment_pc_n(1); // FIXME code it here
+    fn inscrement_pc(&mut self) -> Statement {
+        self.increment_pc_n(1)
     }
 
-    // fn push_on_stack(&mut self) {
-    //     // write data
-    //     self.sp = (self.sp + 1) % self.memory.len();
-    // }
-
-    fn pop_stack(&mut self) -> u8 {
-        let word = self.memory[self.sp];
-        self.sp = self.sp.wrapping_sub(1) % self.memory.len();
-        word
+    #[inline]
+    fn set_nz(&mut self, val: u8) -> Statement {
+        self.nz = val != 0;
+        Success
     }
 
-    fn execute(&mut self, op_code: OpCode) -> Statement {
-        match op_code {
-            RESET  => {
-                self.pc = 0;
-                self.sp = 0;
-                self.nz = false;
+    #[inline]
+    fn decrement_sp(&mut self) -> Statement {
+        self.pc.wrapping_sub(1) % self.memory.len();
+        Success
+    }
+
+    #[inline]
+    fn increment_sp(&mut self) -> Statement {
+        self.sp = self.sp.wrapping_add(1) % self.memory.len();
+        Success
+    }
+
+    #[inline]
+    /// Truncate a number to the machine word width
+    fn trunc(&self, val: u8) -> u8 {
+        val & ((1 << self.arch_width) - 1)
+    }
+
+    fn execute<R: Read, W: Write>(&mut self, op: OpCode, input: &mut R, output: &mut W) -> Statement {
+        match op {
+            RESET  => self.reset(),
+            HALT   => HaltInstruction,
+            IN     => self.execute(NOP, input, output),
+            OUT    => self.execute(NOP, input, output),
+            POP    => {
+                let val = self.memory[self.sp];
+                self.set_nz(val);
+                self.increment_sp();
+                self.increment_sp()
             },
-            HALT   => return Statement::HaltInstruction,
-            IN     => { self.execute(NOP); }
-            OUT    => { self.execute(NOP); }
-            POP    => { self.execute(NOP); }
-            DUP    => { self.execute(NOP); }
-            PUSHPC => { self.execute(NOP); }
-            POPPC  => { self.execute(NOP); }
-            POPSP  => { self.execute(NOP); }
-            SPTGT  => { self.execute(NOP); }
-            PUSHNZ => { self.execute(NOP); }
-            SWAP   => { self.execute(NOP); }
-            PUSH0  => { self.execute(NOP); }
-            ADD    => { self.execute(NOP); }
-            SUB    => { self.execute(NOP); }
-            INC    => { self.execute(NOP); }
-            DEC    => { self.execute(NOP); }
-            MUL    => { self.execute(NOP); }
-            DIV    => { self.execute(NOP); }
-            XOR    => { self.execute(NOP); }
-            AND    => { self.execute(NOP); }
-            OR     => { self.execute(NOP); }
-            SHL    => { self.execute(NOP); }
-            SHR    => { self.execute(NOP); }
-            NOT    => { self.execute(NOP); }
-            BZ     => { self.execute(NOP); }
-            BNZ    => { self.execute(NOP); }
-            BEQ    => { self.execute(NOP); }
-            BGT    => { self.execute(NOP); }
-            BLT    => { self.execute(NOP); }
-            BGE    => { self.execute(NOP); }
-            LOOP   => { self.execute(NOP); }
-            ENDL   => { self.execute(NOP); }
-            BRAN   => { self.execute(NOP); }
-            BRAP   => { self.execute(NOP); }
-            TARGET => { self.execute(NOP); }
+            DUP    => {
+                let tmp = self.memory[self.sp];
+                self.decrement_sp();
+                self.memory[self.sp] = tmp;
+                self.set_nz(tmp);
+                self.increment_sp()
+            },
+            PUSHPC => self.execute(NOP, input, output),
+            POPPC  => self.execute(NOP, input, output),
+            POPSP  => self.execute(NOP, input, output),
+            SPTGT  => self.execute(NOP, input, output),
+            PUSHNZ => self.execute(NOP, input, output),
+            SWAP   => self.execute(NOP, input, output),
+            PUSH0  => self.execute(NOP, input, output),
+            ADD    => self.execute(NOP, input, output),
+            SUB    => self.execute(NOP, input, output),
+            INC    => self.execute(NOP, input, output),
+            DEC    => self.execute(NOP, input, output),
+            MUL    => self.execute(NOP, input, output),
+            DIV    => self.execute(NOP, input, output),
+            XOR    => self.execute(NOP, input, output),
+            AND    => self.execute(NOP, input, output),
+            OR     => self.execute(NOP, input, output),
+            SHL    => self.execute(NOP, input, output),
+            SHR    => self.execute(NOP, input, output),
+            NOT    => self.execute(NOP, input, output),
+            BZ     => self.execute(NOP, input, output),
+            BNZ    => self.execute(NOP, input, output),
+            BEQ    => self.execute(NOP, input, output),
+            BGT    => self.execute(NOP, input, output),
+            BLT    => self.execute(NOP, input, output),
+            BGE    => self.execute(NOP, input, output),
+            LOOP   => self.execute(NOP, input, output),
+            ENDL   => self.execute(NOP, input, output),
+            BRAN   => self.execute(NOP, input, output),
+            BRAP   => self.execute(NOP, input, output),
+            TARGET => self.execute(NOP, input, output),
             SKIP1  => self.increment_pc_n(2),
             SKIP2  => self.increment_pc_n(3),
             SKIP3  => self.increment_pc_n(4),
@@ -125,13 +162,14 @@ impl<'a, R: Read, W: Write> Interpreter<'a, R, W> {
             SKIP8  => self.increment_pc_n(9),
             SKIP9  => self.increment_pc_n(10),
             NOP | _ => self.inscrement_pc(),
-        };
-        Statement::Success
+        }
     }
 
-    // FIXME that's a big loose of time to convert into Instruction type
-    pub fn step(&mut self) -> Statement {
-        let instr = self.memory[self.pc].into();
-        self.execute(instr)
+    /// Use [Empty](https://doc.rust-lang.org/std/io/struct.Empty.html) and/or
+    /// [Sink](https://doc.rust-lang.org/std/io/struct.Sink.html)
+    /// if you don't want to give input and/or output.
+    pub fn step<R: Read, W: Write>(&mut self, input: &mut R, output: &mut W) -> Statement {
+        let instr = self.memory[self.pc];
+        self.execute(instr, input, output)
     }
 }

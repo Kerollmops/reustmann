@@ -35,19 +35,6 @@ impl<'a> From<&'a Mnemonics> for OpCodes {
     }
 }
 
-// FIXME not authorized ?
-// LongMnemonics to OpCodes
-// impl From<LongMnemonics> for OpCodes {
-//     fn from(long_mnemos: LongMnemonics) -> Self {
-//         let LongMnemonics(long_mnemos) = long_mnemos;
-//         let mut op_codes = Vec::with_capacity(long_mnemos.len());
-//         for instr in long_mnemos {
-//             op_codes.push(Into::<Instruction>::into(instr).into());
-//         }
-//         OpCodes(op_codes)
-//     }
-// }
-
 impl From<OpCodes> for Mnemonics {
     fn from(op_codes: OpCodes) -> Self {
         let OpCodes(op_codes) = op_codes;
@@ -70,19 +57,6 @@ impl<'a> From<&'a OpCodes> for Mnemonics {
         Mnemonics(mnemos)
     }
 }
-
-// FIXME not authorized ?
-// LongMnemonics to Mnemonics
-// impl From<LongMnemonics> for Mnemonics {
-//     fn from(lmnemos: LongMnemonics) -> Self {
-//         let LongMnemonics(lmnemos) = lmnemos;
-//         let mut lmnemos = Vec::with_capacity(lmnemos.len());
-//         for instr in lmnemos {
-//             lmnemos.push(Into::<Instruction>::into(instr).into());
-//         }
-//         Mnemonics(lmnemos)
-//     }
-// }
 
 impl From<OpCodes> for LongMnemonics {
     fn from(op_codes: OpCodes) -> Self {

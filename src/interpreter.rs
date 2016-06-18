@@ -3,6 +3,7 @@ use std::fmt;
 use instruction::op_codes::*;
 use memory::{Mnemonics, OpCodes};
 use program::Program;
+use std::usize;
 
 /// The statement the machine cna return.
 #[derive(Copy, Clone)]
@@ -51,7 +52,7 @@ impl Interpreter {
     /// `arch_length` need to be in the range `[1..2^64)`
     /// and `arch_width` in `[6..32)`.
     pub fn new(arch_length: usize, arch_width: usize) -> Result<Interpreter, &'static str> {
-        if arch_length == 0 || arch_length > 2_usize.pow(64) { // FIXME: precomputed ?
+        if arch_length == 0 || arch_length > usize::MAX { // FIXME ugly and wrong !
             return Err("Arch length need to be in the range [1..2^64)");
         }
         if arch_width < 6 || arch_width > 32 {

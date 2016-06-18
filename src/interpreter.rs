@@ -1,9 +1,11 @@
 use std::io::{Read, Write};
+use std::fmt;
 use instruction::op_codes::*;
-use memory::OpCodes;
+use memory::{Mnemonics, OpCodes};
 use program::Program;
 
 /// The statement the machine cna return.
+#[derive(Copy, Clone)]
 pub enum Statement {
     /// If the instruction was correctly executed.
     Success,
@@ -14,6 +16,24 @@ pub enum Statement {
 
 use self::Statement::{Success, HaltInstruction};
 
+/// A Debug structure to help debugging :)
+pub struct DebugStep {
+    op_codes: OpCodes,
+    mnemonics: Mnemonics,
+    pc: usize,
+    sp: usize,
+    nz: bool,
+    statement: Option<Statement>
+}
+
+// writeln!(fmtr, colorify!(red: "Number of zombies killed: {}"), zombie_kills);
+impl fmt::Display for DebugStep {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // TODO #[macro_use] extern crate colorify;
+        write!(f, "pc: {}, sp: {}, nz: {}", self.pc, self.sp, self.nz)
+    }
+}
+
 /// The main interpreter, execute instructions, read from input,
 /// write to output
 pub struct Interpreter {
@@ -21,7 +41,8 @@ pub struct Interpreter {
     memory: Vec<OpCode>, // [1..2^64)
     pc: usize,
     sp: usize,
-    nz: bool
+    nz: bool,
+    last_statement: Option<Statement>
 }
 
 impl Interpreter {
@@ -45,7 +66,8 @@ impl Interpreter {
             memory: memory,
             pc: 0,
             sp: 0,
-            nz: false
+            nz: false,
+            last_statement: None
         })
     }
 
@@ -176,5 +198,20 @@ impl Interpreter {
     pub fn step<R: Read, W: Write>(&mut self, input: &mut R, output: &mut W) -> Statement {
         let instr = self.memory[self.pc];
         self.execute(instr, input, output)
+    }
+
+    pub fn debug_step<R: Read, W: Write>(&mut self, input: &mut R, output: &mut W) -> DebugStep {
+        let op_codes = OpCodes(self.memory.clone());
+        let mnemonics = op_codes.clone().into();
+        let debug_step = DebugStep {
+            op_codes: op_codes,
+            mnemonics: mnemonics,
+            pc: self.pc,
+            sp: self.sp,
+            nz: self.nz,
+            statement: self.last_statement
+        };
+        self.last_statement = Some(self.step(input, output));
+        debug_step
     }
 }

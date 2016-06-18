@@ -2,67 +2,13 @@
 #[macro_use] extern crate nom;
 extern crate rustyline;
 
+mod commands;
+
 use rustyline::completion::FilenameCompleter;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 
-use std::borrow::Cow;
-use std::str::{self, FromStr};
-
-use nom::{IResult, eof, space, digit};
-
-#[derive(Debug, Clone, Copy)]
-pub enum Command {
-    Step(usize),
-    Repeat,
-    Exit,
-}
-
-named!(
-    command<Command>,
-    chain!(
-        c: alt_complete!(
-            exit |
-            steps |
-            repeat) ~
-            eof,
-    || c));
-
-named!(
-    steps<Command>,
-    chain!(
-        alt_complete!(tag!("step") | tag!("s")) ~
-            count: opt!(preceded!(space, usize_parser)),
-        || Command::Step(count.unwrap_or(1))));
-
-named!(
-    exit<Command>,
-    map!(
-        alt_complete!(tag!("exit") | tag!("quit") | tag!("e") | tag!("q")),
-        |_| Command::Exit));
-
-named!(
-    repeat<Command>,
-    value!(Command::Repeat));
-
-named!(
-    usize_parser<usize>,
-    map_res!(
-        map_res!(
-            digit,
-            str::from_utf8),
-        FromStr::from_str));
-
-impl FromStr for Command {
-    type Err = Cow<'static, str>;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match command(s.as_bytes()) {
-            IResult::Done(_, c) => Ok(c),
-            err => Err(format!("Unable to parse command: {:?}", err).into())
-        }
-    }
-}
+use commands::Command;
 
 fn main() {
     let file_comp = FilenameCompleter::new();

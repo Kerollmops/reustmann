@@ -1,19 +1,18 @@
-use instruction::{Instruction, OpCode, Mnemonic, LongMnemonic};
+use instruction::{Instruction, Mnemonic, LongMnemonic};
+use instruction::op_codes::OpCode;
 
-/// a struct that get all instruction in bytes (used in the interpreter)
+/// A struct that get all instruction in bytes (used in the Interpreter).
 #[derive(Clone)]
 pub struct OpCodes(pub Vec<OpCode>);
 
-/// a struct containing all char names of each instruction
+/// A struct containing all mnemonic names of each instruction.
 #[derive(Clone)]
 pub struct Mnemonics(pub Vec<Mnemonic>);
 
-/// a struct containing all long names of each instruction
+/// A struct containing all long names of each instruction.
 #[derive(Clone)]
 pub struct LongMnemonics(pub Vec<LongMnemonic>);
 
-// FIXME accept &Mnemonics...
-// Mnemonics to OpCodes
 impl From<Mnemonics> for OpCodes {
     fn from(mnemos: Mnemonics) -> Self {
         let Mnemonics(mnemos) = mnemos;
@@ -21,6 +20,19 @@ impl From<Mnemonics> for OpCodes {
         for instr in mnemos {
             // FIXME do this in one line
             let instr: Instruction = instr.into();
+            op_codes.push(instr.into());
+        }
+        OpCodes(op_codes)
+    }
+}
+
+impl<'a> From<&'a Mnemonics> for OpCodes {
+    fn from(mnemos: &Mnemonics) -> Self {
+        let &Mnemonics(ref mnemos) = mnemos;
+        let mut op_codes = Vec::with_capacity(mnemos.len());
+        for instr in mnemos.iter() {
+            // FIXME do this in one line
+            let instr: Instruction = (*instr).into();
             op_codes.push(instr.into());
         }
         OpCodes(op_codes)
@@ -42,13 +54,24 @@ impl From<Mnemonics> for OpCodes {
 //     }
 // }
 
-// OpCodes to Mnemonics
 impl From<OpCodes> for Mnemonics {
     fn from(op_codes: OpCodes) -> Self {
         let OpCodes(op_codes) = op_codes;
         let mut mnemos = Vec::with_capacity(op_codes.len());
         for instr in op_codes {
             let instr: Instruction = instr.into();
+            mnemos.push(instr.into());
+        }
+        Mnemonics(mnemos)
+    }
+}
+
+impl<'a> From<&'a OpCodes> for Mnemonics {
+    fn from(op_codes: &OpCodes) -> Self {
+        let &OpCodes(ref op_codes) = op_codes;
+        let mut mnemos = Vec::with_capacity(op_codes.len());
+        for instr in op_codes {
+            let instr: Instruction = (*instr).into();
             mnemos.push(instr.into());
         }
         Mnemonics(mnemos)
@@ -69,7 +92,6 @@ impl From<OpCodes> for Mnemonics {
 //     }
 // }
 
-// OpCodes to LongMnemonics
 impl From<OpCodes> for LongMnemonics {
     fn from(op_codes: OpCodes) -> Self {
         let OpCodes(op_codes) = op_codes;
@@ -82,13 +104,36 @@ impl From<OpCodes> for LongMnemonics {
     }
 }
 
-// Mnemonics to LongMnemonics
+impl<'a> From<&'a OpCodes> for LongMnemonics {
+    fn from(op_codes: &OpCodes) -> Self {
+        let &OpCodes(ref op_codes) = op_codes;
+        let mut lmnemos = Vec::with_capacity(op_codes.len());
+        for instr in op_codes {
+            let instr: Instruction = (*instr).into();
+            lmnemos.push(instr.into());
+        }
+        LongMnemonics(lmnemos)
+    }
+}
+
 impl From<Mnemonics> for LongMnemonics {
     fn from(mnemos: Mnemonics) -> Self {
         let Mnemonics(mnemos) = mnemos;
         let mut lmnemos = Vec::with_capacity(mnemos.len());
         for instr in mnemos {
             let instr: Instruction = instr.into();
+            lmnemos.push(instr.into());
+        }
+        LongMnemonics(lmnemos)
+    }
+}
+
+impl<'a> From<&'a Mnemonics> for LongMnemonics {
+    fn from(mnemos: &Mnemonics) -> Self {
+        let &Mnemonics(ref mnemos) = mnemos;
+        let mut lmnemos = Vec::with_capacity(mnemos.len());
+        for instr in mnemos {
+            let instr: Instruction = (*instr).into();
             lmnemos.push(instr.into());
         }
         LongMnemonics(lmnemos)

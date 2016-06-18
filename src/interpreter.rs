@@ -1,13 +1,13 @@
 use std::io::{Read, Write};
 use instruction::op_codes::*;
-use super::Program;
-use super::OpCodes;
+use memory::OpCodes;
+use program::Program;
 
-/// the statement the machine cna return
+/// The statement the machine cna return.
 pub enum Statement {
-    /// if the instruction was correctly executed
+    /// If the instruction was correctly executed.
     Success,
-    /// if halt instruction has been executed
+    /// If halt instruction has been executed.
     HaltInstruction,
     // other ideas ???
 }
@@ -26,6 +26,9 @@ pub struct Interpreter {
 
 impl Interpreter {
     /// Construct a new Interpreter with an existing Program.
+    ///
+    /// `arch_length` need to be in the range `[1..2^64)`
+    /// and `arch_width` in `[6..32)`.
     pub fn new(arch_length: usize, arch_width: usize) -> Result<Interpreter, &'static str> {
         if arch_length == 0 || arch_length > 2_usize.pow(64) { // FIXME: precomputed ?
             return Err("Arch length need to be in the range [1..2^64)");
@@ -46,10 +49,10 @@ impl Interpreter {
         })
     }
 
-    /// copy your program in the memory of the machine, a reset is done after
-    /// program loaded
+    /// Copy your program in the memory of the machine, a reset is done after
+    /// program was loaded.
     pub fn copy_program(&mut self, program: &Program) -> Result<(), &'static str> {
-        let OpCodes(op_codes) = program.memory().clone().into();
+        let OpCodes(op_codes) = program.memory().into();
         if op_codes.len() > self.memory.len() {
             return Err("Program len is bigger than memory len");
         }
@@ -60,7 +63,7 @@ impl Interpreter {
         Ok(())
     }
 
-    /// reset pc, sp and nz to 0, 0 and false
+    /// Reset `pc`, `sp` and `nz` to `0`, `0` and `false` respectively.
     #[inline]
     pub fn reset(&mut self) -> Statement {
         self.pc = 0;
@@ -99,7 +102,7 @@ impl Interpreter {
     }
 
     #[inline]
-    /// Truncate a number to the machine word width
+    /// Truncate a number to the machine word width.
     fn trunc(&self, val: u8) -> u8 {
         val & ((1 << self.arch_width) - 1)
     }

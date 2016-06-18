@@ -1,10 +1,10 @@
 use std::convert::From;
 
-pub mod op_codes;
 mod mnemonics;
 mod long_mnemonics;
+pub mod op_codes;
 
-pub use self::op_codes::OpCode;
+use self::op_codes::OpCode;
 pub use self::mnemonics::Mnemonic;
 pub use self::long_mnemonics::LongMnemonic;
 

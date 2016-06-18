@@ -12,3 +12,4 @@ name = "reustmann"
 doc = false
 
 [dependencies]
+colorify = "0.2"

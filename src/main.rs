@@ -13,7 +13,7 @@ use nom::{IResult, eof, space, digit};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Command {
-    Steps(usize),
+    Step(usize),
     Repeat,
     Exit,
 }
@@ -23,22 +23,35 @@ named!(
     chain!(
         c: alt_complete!(
             exit |
-            steps/* |
-            repeat*/) ~
+            steps |
+            repeat) ~
             eof,
     || c));
 
 named!(
     steps<Command>,
-    map!(
-        alt_complete!(tag!("steps") | tag!("step") | tag!("s")),
-        |_| Command::Steps(1)));
+    chain!(
+        alt_complete!(tag!("step") | tag!("s")) ~
+            count: opt!(preceded!(space, usize_parser)),
+        || Command::Step(count.unwrap_or(1))));
 
 named!(
     exit<Command>,
     map!(
         alt_complete!(tag!("exit") | tag!("quit") | tag!("e") | tag!("q")),
         |_| Command::Exit));
+
+named!(
+    repeat<Command>,
+    value!(Command::Repeat));
+
+named!(
+    usize_parser<usize>,
+    map_res!(
+        map_res!(
+            digit,
+            str::from_utf8),
+        FromStr::from_str));
 
 impl FromStr for Command {
     type Err = Cow<'static, str>;
@@ -57,8 +70,10 @@ fn main() {
 
     rustyline.set_completer(Some(&file_comp));
     if let Err(_) = rustyline.load_history("history.txt") {
-        println!("No previous history.");
+        printlnc!(yellow: "No previous history.");
     }
+
+    let mut last_command = None;
 
     loop {
         let prompt = format!(colorify!(dark_grey: "({}) "), "rmdb");
@@ -66,12 +81,22 @@ fn main() {
         match readline {
             Ok(line) => {
                 rustyline.add_history_entry(&line);
-                match line.parse() {
-                    Ok(Command::Exit) => break,
-                    Ok(Command::Steps(n)) => println!("execute {}, steps", n),
-                    Ok(Command::Repeat) => println!("repeat"),
-                    Err(ref e) => println!("{}", e),
+
+                let command = match (line.parse(), last_command) {
+                    (Ok(Command::Repeat), Some(c)) => Ok(c),
+                    (Ok(Command::Repeat), None) => Err("No last command".into()),
+                    (Ok(c), _) => Ok(c),
+                    (Err(e), _) => Err(e),
                 };
+
+                match command {
+                    Ok(Command::Step(count)) => println!("execute {} steps", count),
+                    Ok(Command::Exit) => break,
+                    Ok(Command::Repeat) => unreachable!(),
+                    Err(ref e) => printlnc!(red: "{}", e),
+                };
+
+                last_command = command.ok();
             },
             Err(ReadlineError::Interrupted) => {
                 println!("CTRL-C");

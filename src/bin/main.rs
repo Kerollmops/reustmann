@@ -2,13 +2,13 @@
 #[macro_use] extern crate nom;
 extern crate rustyline;
 
-mod commands;
+mod command;
 
 use rustyline::completion::FilenameCompleter;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 
-use commands::Command;
+use command::Command;
 
 fn main() {
     let file_comp = FilenameCompleter::new();

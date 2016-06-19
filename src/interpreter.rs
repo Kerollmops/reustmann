@@ -6,7 +6,7 @@ use program::Program;
 use std::u32;
 
 /// The statement the machine cna return.
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum Statement {
     /// If the instruction was correctly executed.
     Success,
@@ -18,20 +18,20 @@ pub enum Statement {
 use self::Statement::{Success, HaltInstruction};
 
 /// A Debug structure to help debugging :)
-pub struct DebugStep {
-    pub op_codes: OpCodes,
-    pub mnemonics: Mnemonics,
+pub struct DebugInfos {
+    pub memory: OpCodes,
     pub pc: usize,
     pub sp: usize,
     pub nz: bool,
     pub statement: Option<Statement>
 }
 
+// FIXME don't use Display !!!
 // writeln!(fmtr, colorify!(red: "Number of zombies killed: {}"), zombie_kills);
-impl fmt::Display for DebugStep {
+impl fmt::Display for DebugInfos {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // TODO #[macro_use] extern crate colorify;
-        write!(f, "pc: {}, sp: {}, nz: {}", self.pc, self.sp, self.nz)
+        write!(f, "pc: {}, sp: {}, nz: {}, statement: {:?}", self.pc, self.sp, self.nz, self.statement)
     }
 }
 
@@ -92,7 +92,9 @@ impl Interpreter {
         self.pc = 0;
         self.sp = 0;
         self.nz = false;
-        Success
+        let statement = Success;
+        self.last_statement = Some(statement);
+        statement
     }
 
     #[inline]
@@ -198,24 +200,19 @@ impl Interpreter {
     /// if you don't want to give input and/or output.
     pub fn step<R: Read, W: Write>(&mut self, input: &mut R, output: &mut W) -> Statement {
         let instr = self.memory[self.pc];
-        self.execute(instr, input, output)
+        let statement = self.execute(instr, input, output);
+        self.last_statement = Some(statement);
+        statement
     }
 
-    /// Use [Empty](https://doc.rust-lang.org/std/io/struct.Empty.html) and/or
-    /// [Sink](https://doc.rust-lang.org/std/io/struct.Sink.html)
-    /// if you don't want to give input and/or output.
-    pub fn debug_step<R: Read, W: Write>(&mut self, input: &mut R, output: &mut W) -> DebugStep {
-        let op_codes = OpCodes(self.memory.clone());
-        let mnemonics = op_codes.clone().into();
-        let debug_step = DebugStep {
-            op_codes: op_codes,
-            mnemonics: mnemonics,
+    /// Get a debug struct that can help for debugging programs
+    pub fn debug_infos(&self) -> DebugInfos {
+       DebugInfos {
+            memory: OpCodes(self.memory.clone()),
             pc: self.pc,
             sp: self.sp,
             nz: self.nz,
             statement: self.last_statement
-        };
-        self.last_statement = Some(self.step(input, output));
-        debug_step
+        }
     }
 }

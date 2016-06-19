@@ -11,8 +11,7 @@ pub use instruction::op_codes::OpCode;
 pub use instruction::{Mnemonic, LongMnemonic};
 
 pub use program::Program;
-pub use interpreter::Interpreter;
-pub use interpreter::Statement;
+pub use interpreter::{Interpreter, Statement, DebugInfos};
 
 // #[cfg(test)]
 // mod tests {

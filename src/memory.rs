@@ -1,5 +1,6 @@
 use instruction::{Instruction, Mnemonic, LongMnemonic};
 use instruction::op_codes::OpCode;
+use std::ops::Deref;
 
 /// A struct that get all instruction in bytes (used in the Interpreter).
 #[derive(Clone)]
@@ -12,6 +13,27 @@ pub struct Mnemonics(pub Vec<Mnemonic>);
 /// A struct containing all long names of each instruction.
 #[derive(Clone)]
 pub struct LongMnemonics(pub Vec<LongMnemonic>);
+
+impl Deref for OpCodes {
+    type Target = Vec<OpCode>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl Deref for Mnemonics {
+    type Target = Vec<Mnemonic>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl Deref for LongMnemonics {
+    type Target = Vec<LongMnemonic>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 impl From<Mnemonics> for OpCodes {
     fn from(mnemos: Mnemonics) -> Self {

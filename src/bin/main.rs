@@ -4,15 +4,29 @@ extern crate rustyline;
 extern crate reustmann;
 
 mod command;
+mod debugger;
 
+use std::io::{empty, sink};
+use std::error::Error;
+use std::fs::File;
 use rustyline::completion::FilenameCompleter;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 use command::Command;
-use reustmann::Interpreter;
-use reustmann::Statement;
-use std::io::{empty, sink};
+use debugger::Debugger;
+use reustmann::Program;
 
+fn create_program_from_file(filename: &String) -> Result<Program, String> {
+    let mut file = match File::open(filename) {
+        Err(err) => return Err(err.description().into()),
+        Ok(file) => file,
+    };
+    let program = match Program::new(&mut file, true) { // TODO option for this
+        Err(err) => return Err(err.into()),
+        Ok(program) => program,
+    };
+    Ok(program)
+}
 
 fn main() {
     let file_comp = FilenameCompleter::new();
@@ -28,7 +42,7 @@ fn main() {
     let arch_length = 15; // TODO get input source length by default
     let arch_width = 8;
     // FIXME don't unwrap
-    let mut interpreter = Interpreter::new(arch_length, arch_width).unwrap();
+    let mut debugger = Debugger::new(arch_length, arch_width).unwrap();
     let mut empty_input = empty();
     let mut sink_output = sink();
 
@@ -47,30 +61,30 @@ fn main() {
                 };
 
                 match command {
-                    Ok(Command::Step(to_execute)) => {
-                        let mut debug = None;
-                        let mut executed = 0;
-                        for i in 0..to_execute {
-                            let dbg = interpreter.debug_step(&mut empty_input, &mut sink_output);
-                            match dbg.statement {
-                                Some(Statement::HaltInstruction) => {
-                                    executed = i;
-                                    debug = Some(dbg);
-                                    break;
-                                },
-                                _ => debug = Some(dbg),
-                            }
+                    Ok(Command::Copy(ref filename)) => {
+                        match create_program_from_file(&filename) {
+                            Err(err) => printlnc!(red: "{}", err),
+                            Ok(program) => {
+                                if let Err(err) = debugger.copy_program_and_reset(&program) {
+                                    printlnc!(red: "{}", err)
+                                }
+                            },
                         }
-
+                    },
+                    Ok(Command::Reset) => {
+                        debugger.reset();
+                        printlnc!(yellow: "reset.");
+                        println!("{}", debugger.debug_infos())
+                    },
+                    Ok(Command::Step(to_execute)) => {
+                        let (executed, debug) = debugger.steps(to_execute, &mut empty_input, &mut sink_output);
                         if executed == to_execute {
-                            printlnc!(yellow: "executed {} steps.", executed);
+                            printlnc!(yellow: "{} steps executed.", executed);
                         }
                         else {
-                            printlnc!(yellow: "executed {} on {} steps", executed, to_execute);
+                            printlnc!(yellow: "{} steps executed on {}.", executed, to_execute);
                         }
-                        if let Some(debug) = debug {
-                            println!("debug: {}", debug);
-                        }
+                        println!("{}", debug);
                     },
                     Ok(Command::Exit) => break,
                     Ok(Command::Repeat) => unreachable!(),

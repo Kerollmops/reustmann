@@ -1,10 +1,10 @@
 use std::borrow::Cow;
 use std::str::{self, FromStr};
-use nom::{IResult, eof, space, digit};
+use nom::{IResult, eof, space, digit, alphanumeric, is_space};
 
 #[derive(Debug, Clone)]
 pub enum Command {
-    Copy(String), // FIXME use Cow like in rustendo64
+    Copy(String, bool), // FIXME use Cow like in rustendo64
     Reset,
     Step(usize),
     Repeat,
@@ -31,7 +31,10 @@ named!(
     chain!(
         alt_complete!(tag!("load") | tag!("copy")) ~
             filename: preceded!(space, literal_string),
-        || Command::Copy("test".into()) // TODO get last loaded file by default Option
+        || {
+            let string = unsafe{ String::from_utf8_unchecked(filename.into()) };
+            Command::Copy(string, true) // TODO get last loaded file by default, use Option
+        }
     )
 );
 
@@ -81,11 +84,19 @@ named!(double_quote,
     )
 );
 
+// named!(is_not_space,
+//     map!(
+//         is_space,
+//         |x| false
+//     )
+// );
+
 named!(literal_string,
     chain!(
         c: alt_complete!(
-            double_quote/* |
-            escaped*/
+            double_quote |
+            take_while!(call!(|c| !is_space(c)))
+            // escaped!(call!(alpha), '\\', is_not!(space)) // TODO !!!
         ),
         || c
     )

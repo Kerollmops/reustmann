@@ -19,7 +19,7 @@ use self::Statement::{Success, HaltInstruction};
 
 /// A Debug structure to help debugging :)
 pub struct DebugInfos {
-    pub memory: OpCodes,
+    pub memory: Mnemonics,
     pub pc: usize,
     pub sp: usize,
     pub nz: bool,
@@ -31,7 +31,8 @@ pub struct DebugInfos {
 impl fmt::Display for DebugInfos {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // TODO #[macro_use] extern crate colorify;
-        write!(f, "pc: {}, sp: {}, nz: {}, statement: {:?}", self.pc, self.sp, self.nz, self.statement)
+        writeln!(f, "pc: {}, sp: {}, nz: {}, statement: {:?}", self.pc, self.sp, self.nz, self.statement);
+        write!(f, "{:?}", *self.memory)
     }
 }
 
@@ -104,7 +105,7 @@ impl Interpreter {
     }
 
     #[inline]
-    fn inscrement_pc(&mut self) -> Statement {
+    fn increment_pc(&mut self) -> Statement {
         self.increment_pc_n(1)
     }
 
@@ -191,7 +192,7 @@ impl Interpreter {
             SKIP7  => self.increment_pc_n(8),
             SKIP8  => self.increment_pc_n(9),
             SKIP9  => self.increment_pc_n(10),
-            NOP | _ => self.inscrement_pc(),
+            NOP | _ => self.increment_pc(),
         }
     }
 
@@ -208,7 +209,7 @@ impl Interpreter {
     /// Get a debug struct that can help for debugging programs
     pub fn debug_infos(&self) -> DebugInfos {
        DebugInfos {
-            memory: OpCodes(self.memory.clone()),
+            memory: OpCodes(self.memory.clone()).into(),
             pc: self.pc,
             sp: self.sp,
             nz: self.nz,

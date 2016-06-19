@@ -16,12 +16,12 @@ use command::Command;
 use debugger::Debugger;
 use reustmann::Program;
 
-fn create_program_from_file(filename: &String) -> Result<Program, String> {
+fn create_program_from_file(filename: &String, ignore_nl: bool) -> Result<Program, String> {
     let mut file = match File::open(filename) {
         Err(err) => return Err(err.description().into()),
         Ok(file) => file,
     };
-    let program = match Program::new(&mut file, true) { // TODO option for this
+    let program = match Program::new(&mut file, ignore_nl) {
         Err(err) => return Err(err.into()),
         Ok(program) => program,
     };
@@ -39,10 +39,21 @@ fn main() {
 
     let mut last_command = None;
 
-    let arch_length = 15; // TODO get input source length by default
+    let arch_length = 50; // TODO get input source length by default
     let arch_width = 8;
     // FIXME don't unwrap
-    let mut debugger = Debugger::new(arch_length, arch_width).unwrap();
+    let mut debugger = match Debugger::new(arch_length, arch_width) {
+        Err(err) => {
+            printlnc!(red: "{}", err);
+            std::process::exit(1)
+        },
+        Ok(debugger) => debugger,
+    };
+
+    printlnc!(yellow: "Interpreter informations:");
+    printlnc!(yellow: "Arch width: {:>2}", arch_width);
+    printlnc!(yellow: "Arch length: {:>2}", arch_length);
+
     let mut empty_input = empty();
     let mut sink_output = sink();
 
@@ -61,28 +72,30 @@ fn main() {
                 };
 
                 match command {
-                    Ok(Command::Copy(ref filename)) => {
-                        match create_program_from_file(&filename) {
+                    Ok(Command::Copy(ref filename, ignore_nl)) => {
+                        match create_program_from_file(&filename, ignore_nl) {
                             Err(err) => printlnc!(red: "{}", err),
                             Ok(program) => {
-                                if let Err(err) = debugger.copy_program_and_reset(&program) {
-                                    printlnc!(red: "{}", err)
+                                match debugger.copy_program_and_reset(&program) {
+                                    Err(err) => printlnc!(red: "{}", err),
+                                    Ok(_) => {
+                                        printlnc!(yellow: "Program correctly loaded.");
+                                        println!("{}", debugger.debug_infos())
+                                    },
                                 }
                             },
                         }
                     },
                     Ok(Command::Reset) => {
                         debugger.reset();
-                        printlnc!(yellow: "reset.");
+                        printlnc!(yellow: "Reset.");
                         println!("{}", debugger.debug_infos())
                     },
                     Ok(Command::Step(to_execute)) => {
                         let (executed, debug) = debugger.steps(to_execute, &mut empty_input, &mut sink_output);
-                        if executed == to_execute {
-                            printlnc!(yellow: "{} steps executed.", executed);
-                        }
-                        else {
-                            printlnc!(yellow: "{} steps executed on {}.", executed, to_execute);
+                        match executed == to_execute {
+                            true => printlnc!(yellow: "{} steps executed.", executed),
+                            false => printlnc!(yellow: "{} steps executed on {}.", executed, to_execute),
                         }
                         println!("{}", debug);
                     },

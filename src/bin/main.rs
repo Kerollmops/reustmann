@@ -35,19 +35,19 @@ fn create_program_from_file(filename: &String, ignore_nl: bool) -> Result<Progra
 
 // FIXME move this elsewhere
 fn display_statement(statement: Option<Statement>) {
-    print!("last statement: ");
-    if let Some(statement) = statement {
-        let Statement(op_code, is_success) = statement;
-        if is_valid_op_code(op_code) == true {
-            let name: LongMnemonic = Into::<Instruction>::into(op_code).into();
-            println!("{} was {}", name, is_success);
-        }
-        else {
-            println!("{} was {}", op_code, is_success);
-        }
-    }
-    else {
-        println!("empty.");
+    print!("Last instruction was ");
+    match statement {
+        Some(statement) => {
+            let Statement(op_code, is_success) = statement;
+            if is_valid_op_code(op_code) == true {
+                let name: LongMnemonic = Into::<Instruction>::into(op_code).into();
+                println!("'{}' and return '{}'.", name, is_success);
+            }
+            else {
+                println!("'{}' and return '{}'.", op_code, is_success);
+            }
+        },
+        None => println!("not in this dimension."),
     }
 }
 
@@ -89,8 +89,9 @@ fn main() {
     printlnc!(yellow: "Arch width: {:>2}", arch_width);
     printlnc!(yellow: "Arch length: {:>2}", arch_length);
 
-    let mut empty_input = empty();
-    let mut sink_output = sink();
+    let mut input = empty();
+    // let mut output = sink();
+    let mut output = std::io::stdout();
 
     let mut statement = None;
 
@@ -130,7 +131,7 @@ fn main() {
                         display_infos(&dbg.debug_infos(), statement)
                     },
                     Ok(Command::Step(to_execute)) => {
-                        let (executed, debug, stat) = dbg.steps(to_execute, &mut empty_input, &mut sink_output);
+                        let (executed, debug, stat) = dbg.steps(to_execute, &mut input, &mut output);
                         statement = stat;
                         match executed == to_execute {
                             true => printlnc!(yellow: "{} steps executed.", executed),

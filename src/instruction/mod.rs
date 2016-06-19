@@ -12,7 +12,9 @@ pub use self::long_mnemonics::LongMnemonic;
 /// shown with their single-character mnemonics and long mnemonics.
 #[derive(Debug, Clone, Copy)]
 pub enum Instruction {
-    /// No-operation, do-nothing, `;`
+    /// No-operation, do-nothing
+    ///
+    /// mnemonic: `;`
     ///
     /// The NOP opcode may be encoded in memory by the value zero,
     /// or by any value not assigned to another opcode. During execution,
@@ -25,7 +27,9 @@ pub enum Instruction {
     /// ```
     Nop = op_codes::NOP as isize,
 
-    /// Reset, `R`
+    /// Reset
+    ///
+    /// mnemonic: `R`
     ///
     /// ```ignore
     /// PC = 0
@@ -34,12 +38,16 @@ pub enum Instruction {
     /// ```
     Reset = op_codes::RESET as isize,
 
-    /// Halt program execution, `H`
+    /// Halt program execution
+    ///
+    /// mnemonic: `H`
     ///
     /// Causes program execution to stop.
     Halt = op_codes::HALT as isize,
 
-    /// Input a char from stdin, push it onto the stack, `I`
+    /// Input a char from stdin, push it onto the stack
+    ///
+    /// mnemonic: `I`
     ///
     /// ```ignore
     /// SP = SP - 1 mod L
@@ -49,7 +57,9 @@ pub enum Instruction {
     /// ```
     In = op_codes::IN as isize,
 
-    /// Pop a word from the stack, output to stdout, `O`
+    /// Pop a word from the stack, output to stdout
+    ///
+    /// mnemonic: `O`
     ///
     /// If the value on the top of the stack is outside the range of a char,
     /// it will be truncated to a char as it is output.
@@ -63,7 +73,9 @@ pub enum Instruction {
     /// ```
     Out = op_codes::OUT as isize,
 
-    /// Pop a word from the stack, `p`
+    /// Pop a word from the stack
+    ///
+    /// mnemonic: `p`
     ///
     /// ```ignore
     /// SP = SP + 1 mod L
@@ -72,7 +84,9 @@ pub enum Instruction {
     /// ```
     Pop = op_codes::POP as isize,
 
-    /// Duplicate the last stacked value, `D`
+    /// Duplicate the last stacked value
+    ///
+    /// mnemonic: `D`
     ///
     /// ```ignore
     /// Temp = *SP
@@ -83,7 +97,9 @@ pub enum Instruction {
     /// ```
     Dup = op_codes::DUP as isize,
 
-    /// Push the PC onto the stack, `C`
+    /// Push the PC onto the stack
+    ///
+    /// mnemonic: `C`
     ///
     /// ```ignore
     /// SP = SP - 1 mod L
@@ -93,7 +109,9 @@ pub enum Instruction {
     /// ```
     PushPc = op_codes::PUSHPC as isize,
 
-    /// Pop the PC from the stack, `c`
+    /// Pop the PC from the stack
+    ///
+    /// mnemonic: `c`
     ///
     /// ```ignore
     /// PC = *SP mod L
@@ -102,7 +120,9 @@ pub enum Instruction {
     /// ```
     PopPc = op_codes::POPPC as isize,
 
-    /// Pop the SP from the stack, `Y`
+    /// Pop the SP from the stack
+    ///
+    /// mnemonic: `Y`
     ///
     /// ```ignore
     /// SP = *SP mod L
@@ -111,7 +131,9 @@ pub enum Instruction {
     /// ```
     PopSp = op_codes::POPSP as isize,
 
-    /// Set the SP to the next TARGET opcode, `G`
+    /// Set the SP to the next TARGET opcode
+    ///
+    /// mnemonic: `G`
     ///
     /// A search for the subsequent TARGET opcode is done at the time the SPTGT
     /// instruction is encountered, from the SPTGT instruction to memory location L - 1.
@@ -128,7 +150,9 @@ pub enum Instruction {
     /// ```
     SpTgt = op_codes::SPTGT as isize,
 
-    /// Push the NZ flag, `P`
+    /// Push the NZ flag
+    ///
+    /// mnemonic: `P`
     ///
     /// ```ignore
     /// SP = SP - 1 mod L
@@ -138,7 +162,9 @@ pub enum Instruction {
     /// ```
     PushNz = op_codes::PUSHNZ as isize,
 
-    /// Swap the top two items on the stack, `S`
+    /// Swap the top two items on the stack
+    ///
+    /// mnemonic: `S`
     ///
     /// ```ignore
     /// Temp = *SP
@@ -149,7 +175,9 @@ pub enum Instruction {
     /// ```
     Swap = op_codes::SWAP as isize,
 
-    /// Push a zero onto the stack, `0`
+    /// Push a zero onto the stack
+    ///
+    /// mnemonic: `0`
     ///
     /// ```ignore
     /// SP = SP - 1 mod L
@@ -159,7 +187,9 @@ pub enum Instruction {
     /// ```
     Push0 = op_codes::PUSH0 as isize,
 
-    /// Add the top two stacked words, push the result, `+`
+    /// Add the top two stacked words, push the result
+    ///
+    /// mnemonic: `+`
     ///
     /// ```ignore
     /// SP = SP - 1 mod L
@@ -169,7 +199,9 @@ pub enum Instruction {
     /// ```
     Add = op_codes::ADD as isize,
 
-    /// Subtract the top two stacked words and push the result, `-`
+    /// Subtract the top two stacked words and push the result
+    ///
+    /// mnemonic: `-`
     ///
     /// ```ignore
     /// SP = SP - 1 mod L
@@ -179,7 +211,9 @@ pub enum Instruction {
     /// ```
     Sub = op_codes::SUB as isize,
 
-    /// Increment the item at the top of the stack, `.`
+    /// Increment the item at the top of the stack
+    ///
+    /// mnemonic: `.`
     ///
     /// ```ignore
     /// *SP = (*SP) + 1 trunc W
@@ -188,7 +222,9 @@ pub enum Instruction {
     /// ```
     Inc = op_codes::INC as isize,
 
-    /// Decrement the item on the top of the stack, `,`
+    /// Decrement the item on the top of the stack
+    ///
+    /// mnemonic: `,`
     ///
     /// ```ignore
     /// *SP = (*SP) - 1 trunc W
@@ -197,7 +233,9 @@ pub enum Instruction {
     /// ```
     Dec = op_codes::DEC as isize,
 
-    /// Multiply the top two stacked words and push the result, `*`
+    /// Multiply the top two stacked words and push the result
+    ///
+    /// mnemonic: `*`
     ///
     /// ```ignore
     /// SP = SP - 1 mod L
@@ -206,7 +244,9 @@ pub enum Instruction {
     /// ```
     Mul = op_codes::MUL as isize,
 
-    /// Pop two words, divide, push the quotient and remainder, `/`
+    /// Pop two words, divide, push the quotient and remainder
+    ///
+    /// mnemonic: `/`
     ///
     /// If the divisor is zero, the quotient will be the maximum possible word value, and the remainder zero.
     ///
@@ -220,7 +260,9 @@ pub enum Instruction {
     /// ```
     Div = op_codes::DIV as isize,
 
-    /// Bitwise XOR the top two stacked words and push the result, `^`
+    /// Bitwise XOR the top two stacked words and push the result
+    ///
+    /// mnemonic: `^`
     ///
     /// ```ignore
     /// SP = SP - 1 mod L
@@ -230,7 +272,9 @@ pub enum Instruction {
     /// ```
     Xor = op_codes::XOR as isize,
 
-    /// Bitwise AND the top two stacked words and push the result, `&`
+    /// Bitwise AND the top two stacked words and push the result
+    ///
+    /// mnemonic: `&`
     ///
     /// ```ignore
     /// SP = SP - 1 mod L
@@ -240,7 +284,9 @@ pub enum Instruction {
     /// ```
     And = op_codes::AND as isize,
 
-    /// Bitwise OR the top two stacked words and push the result, `|`
+    /// Bitwise OR the top two stacked words and push the result
+    ///
+    /// mnemonic: `|`
     ///
     /// ```ignore
     /// SP = SP - 1 mod L
@@ -250,7 +296,9 @@ pub enum Instruction {
     /// ```
     Or = op_codes::OR as isize,
 
-    /// Logical shift left, `(`
+    /// Logical shift left
+    ///
+    /// mnemonic: `(`
     ///
     /// ```ignore
     /// *SP = *SP << 1 trunc W
@@ -259,7 +307,9 @@ pub enum Instruction {
     /// ```
     Shl = op_codes::SHL as isize,
 
-    /// Logical shift right, `)`
+    /// Logical shift right
+    ///
+    /// mnemonic: `)`
     ///
     /// ```ignore
     /// *SP = *SP >> 1 trunc W
@@ -268,7 +318,9 @@ pub enum Instruction {
     /// ```
     Shr = op_codes::SHR as isize,
 
-    /// Bitwise NOT, `~`
+    /// Bitwise NOT
+    ///
+    /// mnemonic: `~`
     ///
     /// ```ignore
     /// *SP = NOT *SP trunc W
@@ -277,7 +329,9 @@ pub enum Instruction {
     /// ```
     Not = op_codes::NOT as isize,
 
-    /// Branch if zero (NZ flag is false), `Z`
+    /// Branch if zero (NZ flag is false)
+    ///
+    /// mnemonic: `Z`
     ///
     /// Skips one opcode if NZ is false.
     ///
@@ -290,7 +344,9 @@ pub enum Instruction {
     /// ```
     Bz = op_codes::BZ as isize,
 
-    /// Branch if nonzero (NZ flag is true), `z`
+    /// Branch if nonzero (NZ flag is true)
+    ///
+    /// mnemonic: `z`
     ///
     /// Skips one opcode if NZ is true.
     ///
@@ -303,7 +359,9 @@ pub enum Instruction {
     /// ```
     Bnz = op_codes::BNZ as isize,
 
-    /// Compare top two stacked words, branch if equal, `=`
+    /// Compare top two stacked words, branch if equal
+    ///
+    /// mnemonic: `=`
     ///
     /// ```ignore
     /// if *(SP + 1 mod L) .eq. *SP
@@ -314,7 +372,9 @@ pub enum Instruction {
     /// ```
     Beq = op_codes::BEQ as isize,
 
-    /// Compare top two stacked words, branch if greater than, `>`
+    /// Compare top two stacked words, branch if greater than
+    ///
+    /// mnemonic: `>`
     ///
     /// ```ignore
     /// if *(SP + 1 mod L) > *SP
@@ -325,7 +385,9 @@ pub enum Instruction {
     /// ```
     Bgt = op_codes::BGT as isize,
 
-    /// Compare top two stacked words, branch if less than, `{`
+    /// Compare top two stacked words, branch if less than
+    ///
+    /// mnemonic: `{`
     ///
     /// ```ignore
     /// if *(SP + 1 mod L) < *SP
@@ -336,7 +398,9 @@ pub enum Instruction {
     /// ```
     Blt = op_codes::BLT as isize,
 
-    /// Compare top two stacked words, branch if greater than or equal, `}`
+    /// Compare top two stacked words, branch if greater than or equal
+    ///
+    /// mnemonic: `}`
     ///
     /// ```ignore
     /// if *(SP + 1 mod L) >= * SP
@@ -347,7 +411,9 @@ pub enum Instruction {
     /// ```
     Bge = op_codes::BGE as isize,
 
-    /// Repeat the following instructions up to the next ENDL, `L`
+    /// Repeat the following instructions up to the next ENDL
+    ///
+    /// mnemonic: `L`
     ///
     /// ```ignore
     /// PC = PC + 1 mod L
@@ -356,7 +422,9 @@ pub enum Instruction {
     /// ```
     Loop = op_codes::LOOP as isize,
 
-    /// End of LOOP, `]`
+    /// End of LOOP
+    ///
+    /// mnemonic: `]`
     ///
     /// Execution resumes at the instruction following the preceding LOOP opcode.
     /// A search for the preceding LOOP opcode is done at the time the ENDL instruction is encountered,
@@ -373,7 +441,9 @@ pub enum Instruction {
     /// ```
     EndL = op_codes::ENDL as isize,
 
-    /// Branch to the next TARGET opcode, `B`
+    /// Branch to the next TARGET opcode
+    ///
+    /// mnemonic: `B`
     ///
     /// A search for the subsequent TARGET opcode is done at the time the BRAN instruction is encountered,
     /// from the BRAN instruction to memory location L - 1.
@@ -390,7 +460,9 @@ pub enum Instruction {
     /// ```
     BraN = op_codes::BRAN as isize,
 
-    /// Branch to the previous TARGET opcode, `b`
+    /// Branch to the previous TARGET opcode
+    ///
+    /// mnemonic: `b`
     ///
     /// A search for the previous TARGET opcode is done at the time the BRAP instruction is encountered,
     /// from the BRAP instruction to memory location 0. The search does not wrap around.\
@@ -406,7 +478,9 @@ pub enum Instruction {
     /// ```
     BraP = op_codes::BRAP as isize,
 
-    /// Branch target for BRAN and BRAP, `T`
+    /// Branch target for BRAN and BRAP
+    ///
+    /// mnemonic: `T`
     ///
     /// See SPTGT, BRAN, and BRAP instructions for the semantics.
     /// The TARGET opcode is just a marker, and is executed as if it were a NOP.
@@ -418,7 +492,9 @@ pub enum Instruction {
     /// ```
     Target = op_codes::TARGET as isize,
 
-    /// Skip one instruction, `1`
+    /// Skip one instruction
+    ///
+    /// mnemonic: `1`
     ///
     /// ```ignore
     /// PC = PC + 2 mod L
@@ -427,7 +503,9 @@ pub enum Instruction {
     /// ```
     Skip1 = op_codes::SKIP1 as isize,
 
-    /// Skip two instructions, `2`
+    /// Skip two instructions
+    ///
+    /// mnemonic: `2`
     ///
     /// ```ignore
     /// PC = PC + 3 mod L
@@ -436,7 +514,9 @@ pub enum Instruction {
     /// ```
     Skip2 = op_codes::SKIP2 as isize,
 
-    /// Skip three instructions, `3`
+    /// Skip three instructions
+    ///
+    /// mnemonic: `3`
     ///
     /// ```ignore
     /// PC = PC + 4 mod L
@@ -445,7 +525,9 @@ pub enum Instruction {
     /// ```
     Skip3 = op_codes::SKIP3 as isize,
 
-    /// Skip four instructions, `4`
+    /// Skip four instructions
+    ///
+    /// mnemonic: `4`
     ///
     /// ```ignore
     /// PC = PC + 5 mod L
@@ -454,7 +536,9 @@ pub enum Instruction {
     /// ```
     Skip4 = op_codes::SKIP4 as isize,
 
-    /// Skip five instructions, `5`
+    /// Skip five instructions
+    ///
+    /// mnemonic: `5`
     ///
     /// ```ignore
     /// PC = PC + 6 mod L
@@ -463,7 +547,9 @@ pub enum Instruction {
     /// ```
     Skip5 = op_codes::SKIP5 as isize,
 
-    /// Skip five instructions, `6`
+    /// Skip five instructions
+    ///
+    /// mnemonic: `6`
     ///
     /// ```ignore
     /// PC = PC + 7 mod L
@@ -472,7 +558,9 @@ pub enum Instruction {
     /// ```
     Skip6 = op_codes::SKIP6 as isize,
 
-    /// Skip five instructions, `7`
+    /// Skip five instructions
+    ///
+    /// mnemonic: `7`
     ///
     /// ```ignore
     /// PC = PC + 8 mod L
@@ -481,7 +569,9 @@ pub enum Instruction {
     /// ```
     Skip7 = op_codes::SKIP7 as isize,
 
-    /// Skip five instructions, `8`
+    /// Skip five instructions
+    ///
+    /// mnemonic: `8`
     ///
     /// ```ignore
     /// PC = PC + 9 mod L
@@ -490,7 +580,9 @@ pub enum Instruction {
     /// ```
     Skip8 = op_codes::SKIP8 as isize,
 
-    /// Skip five instructions, `9`
+    /// Skip five instructions
+    ///
+    /// mnemonic: `9`
     ///
     /// ```ignore
     /// PC = PC + 10 mod L

@@ -114,8 +114,50 @@ impl Interpreter {
         match op {
             RESET  => self.reset(),
             HALT   => Statement(op, true),
-            IN     => { self.execute(NOP, input, output); Statement(op, true) },
-            OUT    => { self.execute(NOP, input, output); Statement(op, true) },
+            IN     => {
+                self.execute(NOP, input, output);
+
+                // if (mDataInIdx != mDataIn.size()) {
+                //     self.decrement_sp();
+                //     // let val = self.trunc((size_t)(T)mDataIn[mDataInIdx]);
+                //     let val = 0;
+                //     self.memory[self.sp] = val;
+                //     self.set_nz(val);
+                //     // don't increment the index past the last element
+                //     // mDataInIdx = std::min(mDataInIdx + 1, mDataIn.size() - 1);
+                //     self.increment_pc();
+                // } else if (mDataInIdx == 0 && mDataIn.size() == 0) {
+                //     // input zeros in lieu of an input stream
+                //     self.decrement_sp();
+                //     self.set_nz(mem[sp] = 0);
+                //     self.increment_pc();
+                // } else {
+                //     // HALT if reached end of input - should never happen
+                //     // because we prevent dataInIdx from exceeding the string length.
+                //     return false;
+                // }
+                Statement(op, true)
+            },
+            OUT    => {
+                let val = self.memory[self.sp] & 0xff;
+                let status = match output.write(&[val]) {
+                    Err(_) => false,
+                    _ => true
+                };
+                // output.flush()/* .unwrap() */; // FIXME need this ?
+
+                // if (mExecutionTraceLevel >= 1) {
+                //     std::cerr << "Output =====>(T) "
+                //          << std::to_string((unsigned char)(mem[sp] & 0xff))
+                //          << " = \'" << (char)(mem[sp] & 0xff) << "\'" << std::endl;
+                // }
+
+                self.set_nz(val);
+                self.increment_sp();
+                self.increment_pc();
+
+                Statement(op, status)
+            },
             POP    => {
                 let val = self.memory[self.sp];
                 self.set_nz(val);

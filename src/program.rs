@@ -22,6 +22,7 @@ impl Program {
             instructions.push(c as char);
         }
 
+        // FIXME use not_line_ending from nom
         if ignore_last_newline == true {
             if let Some(&'\n') = instructions.last() { // FIXME '\r\n' for windows
                 instructions.pop();

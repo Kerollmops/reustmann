@@ -1,5 +1,6 @@
 //! Reustmann
 
+extern crate itertools;
 mod program;
 mod interpreter;
 

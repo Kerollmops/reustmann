@@ -2,7 +2,9 @@ use std::io::{Read, Write};
 use std::fmt;
 use instruction::op_codes::*;
 use memory::{Mnemonics, OpCodes};
+use std::iter::FromIterator;
 use program::Program;
+use itertools::Itertools;
 use std::u32;
 
 /// The statement the machine cna return.
@@ -18,6 +20,7 @@ pub enum Statement {
 use self::Statement::{Success, HaltInstruction};
 
 /// A Debug structure to help debugging :)
+// #[derive(Debug)] // TODO !!!
 pub struct DebugInfos {
     pub memory: Mnemonics,
     pub pc: usize,
@@ -32,7 +35,9 @@ impl fmt::Display for DebugInfos {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // TODO #[macro_use] extern crate colorify;
         writeln!(f, "pc: {}, sp: {}, nz: {}, statement: {:?}", self.pc, self.sp, self.nz, self.statement);
-        write!(f, "{:?}", *self.memory)
+        let instrs = (*self.memory).iter().skip(self.pc).cycle().take(10).cloned().intersperse(' ');
+        let string = String::from_iter(instrs);
+        write!(f, "{}", string)
     }
 }
 
@@ -144,7 +149,7 @@ impl Interpreter {
                 let val = self.memory[self.sp];
                 self.set_nz(val);
                 self.increment_sp();
-                self.increment_sp()
+                self.increment_pc()
             },
             DUP    => {
                 let tmp = self.memory[self.sp];

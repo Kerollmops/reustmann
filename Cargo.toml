@@ -15,3 +15,4 @@ doc = false
 colorify = "0.2"
 nom = "1.2"
 rustyline = "0.2"
+itertools = "0.4"

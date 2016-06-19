@@ -84,13 +84,6 @@ named!(double_quote,
     )
 );
 
-// named!(is_not_space,
-//     map!(
-//         is_space,
-//         |x| false
-//     )
-// );
-
 named!(literal_string,
     chain!(
         c: alt_complete!(

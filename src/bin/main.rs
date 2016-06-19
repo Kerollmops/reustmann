@@ -50,6 +50,7 @@ fn main() {
         Ok(debugger) => debugger,
     };
 
+    // TODO make it clear and beautiful
     printlnc!(yellow: "Interpreter informations:");
     printlnc!(yellow: "Arch width: {:>2}", arch_width);
     printlnc!(yellow: "Arch length: {:>2}", arch_length);

@@ -2,6 +2,7 @@
 #[macro_use] extern crate nom;
 extern crate rustyline;
 extern crate reustmann;
+extern crate itertools;
 
 mod command;
 mod debugger;
@@ -12,6 +13,10 @@ use std::fs::File;
 use rustyline::completion::FilenameCompleter;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
+use reustmann::{DebugInfos, Statement}; // FIXME move this elsewhere
+use reustmann::instruction::{ Instruction, LongMnemonic, is_valid_op_code};
+use std::iter::FromIterator;
+use itertools::Itertools;
 use command::Command;
 use debugger::Debugger;
 use reustmann::Program;
@@ -28,6 +33,35 @@ fn create_program_from_file(filename: &String, ignore_nl: bool) -> Result<Progra
     Ok(program)
 }
 
+// FIXME move this elsewhere
+fn display_statement(statement: Option<Statement>) {
+    print!("last statement: ");
+    if let Some(statement) = statement {
+        let Statement(op_code, is_success) = statement;
+        if is_valid_op_code(op_code) == true {
+            let name: LongMnemonic = Into::<Instruction>::into(op_code).into();
+            println!("{} was {}", name, is_success);
+        }
+        else {
+            println!("{} was {}", op_code, is_success);
+        }
+    }
+    else {
+        println!("empty.");
+    }
+}
+
+// FIXME move this elsewhere
+fn display_infos(debug_infos: &DebugInfos, statement: Option<Statement>) {
+    let &DebugInfos{ ref memory, pc, sp, nz } = debug_infos;
+    // TODO #[macro_use] extern crate colorify;
+    println!("pc: {}, sp: {}, nz: {}", pc, sp, nz);
+    display_statement(statement);
+    let instrs = (*memory).iter().skip(pc).cycle().take(10).cloned().intersperse(' ');
+    let string = String::from_iter(instrs);
+    println!("{}", string);
+}
+
 fn main() {
     let file_comp = FilenameCompleter::new();
     let mut rustyline = Editor::new();
@@ -42,12 +76,12 @@ fn main() {
     let arch_length = 50; // TODO get input source length by default
     let arch_width = 8;
     // FIXME don't unwrap
-    let mut debugger = match Debugger::new(arch_length, arch_width) {
+    let mut dbg = match Debugger::new(arch_length, arch_width) {
         Err(err) => {
             printlnc!(red: "{}", err);
             std::process::exit(1)
         },
-        Ok(debugger) => debugger,
+        Ok(dbg) => dbg,
     };
 
     // TODO make it clear and beautiful
@@ -57,6 +91,8 @@ fn main() {
 
     let mut empty_input = empty();
     let mut sink_output = sink();
+
+    let mut statement = None;
 
     loop {
         let prompt = format!(colorify!(dark_grey: "({}) "), "rmdb");
@@ -73,32 +109,34 @@ fn main() {
                 };
 
                 match command {
+                    Ok(Command::Infos) => display_infos(&dbg.debug_infos(), statement),
                     Ok(Command::Copy(ref filename, ignore_nl)) => {
                         match create_program_from_file(&filename, ignore_nl) {
                             Err(err) => printlnc!(red: "{}", err),
                             Ok(program) => {
-                                match debugger.copy_program_and_reset(&program) {
+                                match dbg.copy_program_and_reset(&program) {
                                     Err(err) => printlnc!(red: "{}", err),
                                     Ok(_) => {
                                         printlnc!(yellow: "Program correctly loaded.");
-                                        println!("{}", debugger.debug_infos())
+                                        display_infos(&dbg.debug_infos(), statement)
                                     },
                                 }
                             },
                         }
                     },
                     Ok(Command::Reset) => {
-                        debugger.reset();
+                        statement = Some(dbg.reset());
                         printlnc!(yellow: "Reset.");
-                        println!("{}", debugger.debug_infos())
+                        display_infos(&dbg.debug_infos(), statement)
                     },
                     Ok(Command::Step(to_execute)) => {
-                        let (executed, debug) = debugger.steps(to_execute, &mut empty_input, &mut sink_output);
+                        let (executed, debug, stat) = dbg.steps(to_execute, &mut empty_input, &mut sink_output);
+                        statement = stat;
                         match executed == to_execute {
                             true => printlnc!(yellow: "{} steps executed.", executed),
                             false => printlnc!(yellow: "{} steps executed on {}.", executed, to_execute),
                         }
-                        println!("{}", debug);
+                        display_infos(&debug, statement)
                     },
                     Ok(Command::Exit) => break,
                     Ok(Command::Repeat) => unreachable!(),

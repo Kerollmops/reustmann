@@ -4,6 +4,7 @@ use nom::{IResult, eof, space, digit, alphanumeric, is_space};
 
 #[derive(Debug, Clone)]
 pub enum Command {
+    Infos,
     Copy(String, bool), // FIXME use Cow like in rustendo64
     Reset,
     Step(usize),
@@ -16,6 +17,7 @@ named!(
     chain!(
         c: alt_complete!(
             exit |
+            infos |
             copy |
             reset |
             step |
@@ -23,6 +25,14 @@ named!(
         ) ~
         eof, // force eof after matching command
         || c
+    )
+);
+
+named!(
+    infos<Command>,
+    map!(
+        alt_complete!(tag!("infos") | tag!("info") | tag!("i")),
+        |_| Command::Infos
     )
 );
 

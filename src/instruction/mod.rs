@@ -1,10 +1,10 @@
 use std::convert::From;
 
-mod mnemonics;
-mod long_mnemonics;
+pub mod mnemonics;
+pub mod long_mnemonics;
 pub mod op_codes;
 
-use self::op_codes::OpCode;
+pub use self::op_codes::OpCode;
 pub use self::mnemonics::Mnemonic;
 pub use self::long_mnemonics::LongMnemonic;
 
@@ -501,6 +501,60 @@ pub enum Instruction {
 }
 
 use self::Instruction::*;
+
+/// Check if a op_code is a direct command
+/// or will be interpreted as NOP
+pub fn is_valid_op_code(op_code: OpCode) -> bool {
+    match op_code {
+            op_codes::NOP    |
+            op_codes::RESET  |
+            op_codes::HALT   |
+            op_codes::IN     |
+            op_codes::OUT    |
+            op_codes::POP    |
+            op_codes::DUP    |
+            op_codes::PUSHPC |
+            op_codes::POPPC  |
+            op_codes::POPSP  |
+            op_codes::SPTGT  |
+            op_codes::PUSHNZ |
+            op_codes::SWAP   |
+            op_codes::PUSH0  |
+            op_codes::ADD    |
+            op_codes::SUB    |
+            op_codes::INC    |
+            op_codes::DEC    |
+            op_codes::MUL    |
+            op_codes::DIV    |
+            op_codes::XOR    |
+            op_codes::AND    |
+            op_codes::OR     |
+            op_codes::SHL    |
+            op_codes::SHR    |
+            op_codes::NOT    |
+            op_codes::BZ     |
+            op_codes::BNZ    |
+            op_codes::BEQ    |
+            op_codes::BGT    |
+            op_codes::BLT    |
+            op_codes::BGE    |
+            op_codes::LOOP   |
+            op_codes::ENDL   |
+            op_codes::BRAN   |
+            op_codes::BRAP   |
+            op_codes::TARGET |
+            op_codes::SKIP1  |
+            op_codes::SKIP2  |
+            op_codes::SKIP3  |
+            op_codes::SKIP4  |
+            op_codes::SKIP5  |
+            op_codes::SKIP6  |
+            op_codes::SKIP7  |
+            op_codes::SKIP8  |
+            op_codes::SKIP9 => true,
+            _ => false
+        }
+}
 
 impl From<Mnemonic> for Instruction {
     fn from(c: Mnemonic) -> Self {

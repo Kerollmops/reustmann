@@ -1,23 +1,15 @@
 use std::io::{Read, Write};
-use std::fmt;
 use instruction::op_codes::*;
 use memory::{Mnemonics, OpCodes};
-use std::iter::FromIterator;
 use program::Program;
-use itertools::Itertools;
 use std::u32;
 
-/// The statement the machine cna return.
-#[derive(Debug, Copy, Clone)]
-pub enum Statement {
-    /// If the instruction was correctly executed.
-    Success,
-    /// If halt instruction has been executed.
-    HaltInstruction,
-    // other ideas ???
-}
+/// Type used to return the execution status of a command
+pub type ExecutionSucceeded = bool;
 
-use self::Statement::{Success, HaltInstruction};
+/// Type used to return the opcode executed with its execution status
+#[derive(Debug, Copy, Clone)]
+pub struct Statement(pub OpCode, pub ExecutionSucceeded);
 
 /// A Debug structure to help debugging :)
 // #[derive(Debug)] // TODO !!!
@@ -25,20 +17,7 @@ pub struct DebugInfos {
     pub memory: Mnemonics,
     pub pc: usize,
     pub sp: usize,
-    pub nz: bool,
-    pub statement: Option<Statement>
-}
-
-// FIXME don't use Display !!!
-// writeln!(fmtr, colorify!(red: "Number of zombies killed: {}"), zombie_kills);
-impl fmt::Display for DebugInfos {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // TODO #[macro_use] extern crate colorify;
-        writeln!(f, "pc: {}, sp: {}, nz: {}, statement: {:?}", self.pc, self.sp, self.nz, self.statement);
-        let instrs = (*self.memory).iter().skip(self.pc).cycle().take(10).cloned().intersperse(' ');
-        let string = String::from_iter(instrs);
-        write!(f, "{}", string)
-    }
+    pub nz: bool
 }
 
 /// The main interpreter, execute instructions, read from input,
@@ -48,8 +27,7 @@ pub struct Interpreter {
     memory: Vec<OpCode>, // [1..2^32)
     pc: usize,
     sp: usize,
-    nz: bool,
-    last_statement: Option<Statement>
+    nz: bool
 }
 
 impl Interpreter {
@@ -73,8 +51,7 @@ impl Interpreter {
             memory: memory,
             pc: 0,
             sp: 0,
-            nz: false,
-            last_statement: None
+            nz: false
         })
     }
 
@@ -98,38 +75,32 @@ impl Interpreter {
         self.pc = 0;
         self.sp = 0;
         self.nz = false;
-        let statement = Success;
-        self.last_statement = Some(statement);
-        statement
+        Statement(RESET, true)
     }
 
     #[inline]
-    fn increment_pc_n(&mut self, n: usize) -> Statement {
+    fn increment_pc_n(&mut self, n: usize) {
         self.pc = self.pc.wrapping_add(n) % self.memory.len();
-        Success
     }
 
     #[inline]
-    fn increment_pc(&mut self) -> Statement {
-        self.increment_pc_n(1)
+    fn increment_pc(&mut self) {
+        self.increment_pc_n(1);
     }
 
     #[inline]
-    fn set_nz(&mut self, val: u8) -> Statement {
+    fn set_nz(&mut self, val: u8) {
         self.nz = val != 0;
-        Success
     }
 
     #[inline]
-    fn decrement_sp(&mut self) -> Statement {
+    fn decrement_sp(&mut self) {
         self.pc.wrapping_sub(1) % self.memory.len();
-        Success
     }
 
     #[inline]
-    fn increment_sp(&mut self) -> Statement {
-        self.sp = self.sp.wrapping_add(1) % self.memory.len();
-        Success
+    fn increment_sp(&mut self) {
+        self.sp = self.sp.wrapping_add(1) % self.memory.len()
     }
 
     #[inline]
@@ -142,62 +113,64 @@ impl Interpreter {
     fn execute<R: Read, W: Write>(&mut self, op: OpCode, input: &mut R, output: &mut W) -> Statement {
         match op {
             RESET  => self.reset(),
-            HALT   => HaltInstruction,
-            IN     => self.execute(NOP, input, output),
-            OUT    => self.execute(NOP, input, output),
+            HALT   => Statement(op, true),
+            IN     => { self.execute(NOP, input, output); Statement(op, true) },
+            OUT    => { self.execute(NOP, input, output); Statement(op, true) },
             POP    => {
                 let val = self.memory[self.sp];
                 self.set_nz(val);
                 self.increment_sp();
-                self.increment_pc()
+                self.increment_pc();
+                Statement(op, true)
             },
             DUP    => {
                 let tmp = self.memory[self.sp];
                 self.decrement_sp();
                 self.memory[self.sp] = tmp;
                 self.set_nz(tmp);
-                self.increment_sp()
+                self.increment_sp();
+                Statement(op, true)
             },
-            PUSHPC => self.execute(NOP, input, output),
-            POPPC  => self.execute(NOP, input, output),
-            POPSP  => self.execute(NOP, input, output),
-            SPTGT  => self.execute(NOP, input, output),
-            PUSHNZ => self.execute(NOP, input, output),
-            SWAP   => self.execute(NOP, input, output),
-            PUSH0  => self.execute(NOP, input, output),
-            ADD    => self.execute(NOP, input, output),
-            SUB    => self.execute(NOP, input, output),
-            INC    => self.execute(NOP, input, output),
-            DEC    => self.execute(NOP, input, output),
-            MUL    => self.execute(NOP, input, output),
-            DIV    => self.execute(NOP, input, output),
-            XOR    => self.execute(NOP, input, output),
-            AND    => self.execute(NOP, input, output),
-            OR     => self.execute(NOP, input, output),
-            SHL    => self.execute(NOP, input, output),
-            SHR    => self.execute(NOP, input, output),
-            NOT    => self.execute(NOP, input, output),
-            BZ     => self.execute(NOP, input, output),
-            BNZ    => self.execute(NOP, input, output),
-            BEQ    => self.execute(NOP, input, output),
-            BGT    => self.execute(NOP, input, output),
-            BLT    => self.execute(NOP, input, output),
-            BGE    => self.execute(NOP, input, output),
-            LOOP   => self.execute(NOP, input, output),
-            ENDL   => self.execute(NOP, input, output),
-            BRAN   => self.execute(NOP, input, output),
-            BRAP   => self.execute(NOP, input, output),
-            TARGET => self.execute(NOP, input, output),
-            SKIP1  => self.increment_pc_n(2),
-            SKIP2  => self.increment_pc_n(3),
-            SKIP3  => self.increment_pc_n(4),
-            SKIP4  => self.increment_pc_n(5),
-            SKIP5  => self.increment_pc_n(6),
-            SKIP6  => self.increment_pc_n(7),
-            SKIP7  => self.increment_pc_n(8),
-            SKIP8  => self.increment_pc_n(9),
-            SKIP9  => self.increment_pc_n(10),
-            NOP | _ => self.increment_pc(),
+            PUSHPC => { self.execute(NOP, input, output); Statement(op, true) },
+            POPPC  => { self.execute(NOP, input, output); Statement(op, true) },
+            POPSP  => { self.execute(NOP, input, output); Statement(op, true) },
+            SPTGT  => { self.execute(NOP, input, output); Statement(op, true) },
+            PUSHNZ => { self.execute(NOP, input, output); Statement(op, true) },
+            SWAP   => { self.execute(NOP, input, output); Statement(op, true) },
+            PUSH0  => { self.execute(NOP, input, output); Statement(op, true) },
+            ADD    => { self.execute(NOP, input, output); Statement(op, true) },
+            SUB    => { self.execute(NOP, input, output); Statement(op, true) },
+            INC    => { self.execute(NOP, input, output); Statement(op, true) },
+            DEC    => { self.execute(NOP, input, output); Statement(op, true) },
+            MUL    => { self.execute(NOP, input, output); Statement(op, true) },
+            DIV    => { self.execute(NOP, input, output); Statement(op, true) },
+            XOR    => { self.execute(NOP, input, output); Statement(op, true) },
+            AND    => { self.execute(NOP, input, output); Statement(op, true) },
+            OR     => { self.execute(NOP, input, output); Statement(op, true) },
+            SHL    => { self.execute(NOP, input, output); Statement(op, true) },
+            SHR    => { self.execute(NOP, input, output); Statement(op, true) },
+            NOT    => { self.execute(NOP, input, output); Statement(op, true) },
+            BZ     => { self.execute(NOP, input, output); Statement(op, true) },
+            BNZ    => { self.execute(NOP, input, output); Statement(op, true) },
+            BEQ    => { self.execute(NOP, input, output); Statement(op, true) },
+            BGT    => { self.execute(NOP, input, output); Statement(op, true) },
+            BLT    => { self.execute(NOP, input, output); Statement(op, true) },
+            BGE    => { self.execute(NOP, input, output); Statement(op, true) },
+            LOOP   => { self.execute(NOP, input, output); Statement(op, true) },
+            ENDL   => { self.execute(NOP, input, output); Statement(op, true) },
+            BRAN   => { self.execute(NOP, input, output); Statement(op, true) },
+            BRAP   => { self.execute(NOP, input, output); Statement(op, true) },
+            TARGET => { self.execute(NOP, input, output); Statement(op, true) },
+            SKIP1  => { self.increment_pc_n(2); Statement(op, true) },
+            SKIP2  => { self.increment_pc_n(3); Statement(op, true) },
+            SKIP3  => { self.increment_pc_n(4); Statement(op, true) },
+            SKIP4  => { self.increment_pc_n(5); Statement(op, true) },
+            SKIP5  => { self.increment_pc_n(6); Statement(op, true) },
+            SKIP6  => { self.increment_pc_n(7); Statement(op, true) },
+            SKIP7  => { self.increment_pc_n(8); Statement(op, true) },
+            SKIP8  => { self.increment_pc_n(9); Statement(op, true) },
+            SKIP9  => { self.increment_pc_n(10); Statement(op, true) },
+            NOP | _ => { self.increment_pc(); Statement(op, true) }, // FIXME return false if not NOP directly ?
         }
     }
 
@@ -206,9 +179,7 @@ impl Interpreter {
     /// if you don't want to give input and/or output.
     pub fn step<R: Read, W: Write>(&mut self, input: &mut R, output: &mut W) -> Statement {
         let instr = self.memory[self.pc];
-        let statement = self.execute(instr, input, output);
-        self.last_statement = Some(statement);
-        statement
+        self.execute(instr, input, output)
     }
 
     /// Get a debug struct that can help for debugging programs
@@ -217,8 +188,7 @@ impl Interpreter {
             memory: OpCodes(self.memory.clone()).into(),
             pc: self.pc,
             sp: self.sp,
-            nz: self.nz,
-            statement: self.last_statement
+            nz: self.nz
         }
     }
 }

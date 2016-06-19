@@ -3,7 +3,7 @@ use std::fmt;
 use instruction::op_codes::*;
 use memory::{Mnemonics, OpCodes};
 use program::Program;
-use std::usize;
+use std::u32;
 
 /// The statement the machine cna return.
 #[derive(Copy, Clone)]
@@ -19,12 +19,12 @@ use self::Statement::{Success, HaltInstruction};
 
 /// A Debug structure to help debugging :)
 pub struct DebugStep {
-    op_codes: OpCodes,
-    mnemonics: Mnemonics,
-    pc: usize,
-    sp: usize,
-    nz: bool,
-    statement: Option<Statement>
+    pub op_codes: OpCodes,
+    pub mnemonics: Mnemonics,
+    pub pc: usize,
+    pub sp: usize,
+    pub nz: bool,
+    pub statement: Option<Statement>
 }
 
 // writeln!(fmtr, colorify!(red: "Number of zombies killed: {}"), zombie_kills);
@@ -39,7 +39,7 @@ impl fmt::Display for DebugStep {
 /// write to output
 pub struct Interpreter {
     arch_width: u8,      // [6..32)
-    memory: Vec<OpCode>, // [1..2^64)
+    memory: Vec<OpCode>, // [1..2^32)
     pc: usize,
     sp: usize,
     nz: bool,
@@ -49,18 +49,18 @@ pub struct Interpreter {
 impl Interpreter {
     /// Construct a new Interpreter with an existing Program.
     ///
-    /// `arch_length` need to be in the range `[1..2^64)`
+    /// `arch_length` need to be in the range `[1..2^32)`
     /// and `arch_width` in `[6..32)`.
     pub fn new(arch_length: usize, arch_width: usize) -> Result<Interpreter, &'static str> {
-        if arch_length == 0 || arch_length > usize::MAX { // FIXME ugly and wrong !
+        if arch_length == 0 || arch_length > u32::MAX as usize { // FIXME ugly and wrong !
             return Err("Arch length need to be in the range [1..2^64)");
         }
         if arch_width < 6 || arch_width > 32 {
             return Err("Arch width need to be in the range [6..32)");
         }
         let mut memory = Vec::with_capacity(arch_length);
-        for i in memory.iter_mut() {
-            *i = NOP;
+        for _ in 0..arch_length {
+            memory.push(NOP);
         }
         Ok(Interpreter {
             arch_width: arch_width as u8,
@@ -201,6 +201,9 @@ impl Interpreter {
         self.execute(instr, input, output)
     }
 
+    /// Use [Empty](https://doc.rust-lang.org/std/io/struct.Empty.html) and/or
+    /// [Sink](https://doc.rust-lang.org/std/io/struct.Sink.html)
+    /// if you don't want to give input and/or output.
     pub fn debug_step<R: Read, W: Write>(&mut self, input: &mut R, output: &mut W) -> DebugStep {
         let op_codes = OpCodes(self.memory.clone());
         let mnemonics = op_codes.clone().into();

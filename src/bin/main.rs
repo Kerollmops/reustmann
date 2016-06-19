@@ -10,6 +10,9 @@ use rustyline::error::ReadlineError;
 use rustyline::Editor;
 use command::Command;
 use reustmann::Interpreter;
+use reustmann::Statement;
+use std::io::{empty, sink};
+
 
 fn main() {
     let file_comp = FilenameCompleter::new();
@@ -26,6 +29,8 @@ fn main() {
     let arch_width = 8;
     // FIXME don't unwrap
     let mut interpreter = Interpreter::new(arch_length, arch_width).unwrap();
+    let mut empty_input = empty();
+    let mut sink_output = sink();
 
     loop {
         let prompt = format!(colorify!(dark_grey: "({}) "), "rmdb");
@@ -42,16 +47,30 @@ fn main() {
                 };
 
                 match command {
-                    Ok(Command::Step(count)) => {
-                        // let mut n = 0; // FIXME a Rust way can be better !
-                        // let n = for i in 0..count {
-                        //     // n = i;
-                        //     break i;
-                        // };
-                        // let debug = interpreter.debug_step();
+                    Ok(Command::Step(to_execute)) => {
+                        let mut debug = None;
+                        let mut executed = 0;
+                        for i in 0..to_execute {
+                            let dbg = interpreter.debug_step(&mut empty_input, &mut sink_output);
+                            match dbg.statement {
+                                Some(Statement::HaltInstruction) => {
+                                    executed = i;
+                                    debug = Some(dbg);
+                                    break;
+                                },
+                                _ => debug = Some(dbg),
+                            }
+                        }
 
-                        println!("executed {} steps", count);
-                        // println!("debug: {}", debug)
+                        if executed == to_execute {
+                            printlnc!(yellow: "executed {} steps.", executed);
+                        }
+                        else {
+                            printlnc!(yellow: "executed {} on {} steps", executed, to_execute);
+                        }
+                        if let Some(debug) = debug {
+                            println!("debug: {}", debug);
+                        }
                     },
                     Ok(Command::Exit) => break,
                     Ok(Command::Repeat) => unreachable!(),

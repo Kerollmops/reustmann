@@ -12,6 +12,7 @@ pub use instruction::{Mnemonic, LongMnemonic};
 
 pub use program::Program;
 pub use interpreter::Interpreter;
+pub use interpreter::Statement;
 
 // #[cfg(test)]
 // mod tests {

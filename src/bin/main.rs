@@ -2,7 +2,6 @@
 #[macro_use] extern crate nom;
 extern crate rustyline;
 extern crate reustmann;
-extern crate itertools;
 
 mod command;
 mod debugger;
@@ -15,8 +14,6 @@ use rustyline::error::ReadlineError;
 use rustyline::Editor;
 use reustmann::{DebugInfos, Statement}; // FIXME move this elsewhere
 use reustmann::instruction::{ Instruction, LongMnemonic, Mnemonic, OpCode, is_valid_op_code};
-use std::iter::FromIterator;
-use itertools::Itertools;
 use command::Command;
 use debugger::Debugger;
 use reustmann::Program;
@@ -59,7 +56,7 @@ fn format_program_counter(mem_addr: usize, offset: usize, op_code: OpCode) -> St
 
     let op_code = match is_valid_op_code(op_code) {
         true => format!("{:#04x}, '{}'", op_code, Into::<Mnemonic>::into(instr)),
-        false => format!("{:#04x}, '{}'", op_code, Into::<char>::into(instr)),
+        false => format!("{:#04x}, '{}'", op_code, op_code as char),
     };
     format!("{} <{:+}>: {} ({})", mem_addr, offset, longmnemo, op_code)
 }
@@ -74,9 +71,10 @@ fn display_infos(debug_infos: &DebugInfos, statement: Option<Statement>) {
     println!("pc: {}, sp: {}, nz: {}", pc, sp, nz);
     display_statement(statement);
 
-    let mut instrs = (*memory).iter().enumerate().cycle().skip(pc).take(10).enumerate();
+    let lines = 10;
+    let mut instrs = (*memory).iter().enumerate().cycle().skip(pc).take(lines).enumerate();
+    let mut stack = (*memory).iter().rev().enumerate().cycle().skip(sp).take(lines);
     if let Some((idx, (mem_addr, op_code))) = instrs.next() {
-        // FIXME wrong mem_addr !!!
         let pc_side = format_program_counter(mem_addr, idx, *op_code);
         let pc_side = format!("{} {}", colorify!(red: "pc"), pc_side);
         let sp_side = format_stack_pointer();
@@ -84,7 +82,6 @@ fn display_infos(debug_infos: &DebugInfos, statement: Option<Statement>) {
         println!("{}    {}", pc_side, sp_side);
     }
     for (idx, (mem_addr, op_code)) in instrs {
-        // FIXME wrong mem_addr !!!
         let pc_side = format_program_counter(mem_addr, idx, *op_code);
         let pc_side = format!("   {}", pc_side);
         let sp_side = format_stack_pointer();

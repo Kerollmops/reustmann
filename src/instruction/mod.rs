@@ -648,6 +648,60 @@ pub fn is_valid_op_code(op_code: OpCode) -> bool {
         }
 }
 
+/// Check if a op_code is a direct command
+/// or will be interpreted as NOP
+pub fn is_valid_mnemonic(mnemo: Mnemonic) -> bool {
+    match mnemo {
+              mnemonics::NOP
+            | mnemonics::RESET
+            | mnemonics::HALT
+            | mnemonics::IN
+            | mnemonics::OUT
+            | mnemonics::POP
+            | mnemonics::DUP
+            | mnemonics::PUSHPC
+            | mnemonics::POPPC
+            | mnemonics::POPSP
+            | mnemonics::SPTGT
+            | mnemonics::PUSHNZ
+            | mnemonics::SWAP
+            | mnemonics::PUSH0
+            | mnemonics::ADD
+            | mnemonics::SUB
+            | mnemonics::INC
+            | mnemonics::DEC
+            | mnemonics::MUL
+            | mnemonics::DIV
+            | mnemonics::XOR
+            | mnemonics::AND
+            | mnemonics::OR
+            | mnemonics::SHL
+            | mnemonics::SHR
+            | mnemonics::NOT
+            | mnemonics::BZ
+            | mnemonics::BNZ
+            | mnemonics::BEQ
+            | mnemonics::BGT
+            | mnemonics::BLT
+            | mnemonics::BGE
+            | mnemonics::LOOP
+            | mnemonics::ENDL
+            | mnemonics::BRAN
+            | mnemonics::BRAP
+            | mnemonics::TARGET
+            | mnemonics::SKIP1
+            | mnemonics::SKIP2
+            | mnemonics::SKIP3
+            | mnemonics::SKIP4
+            | mnemonics::SKIP5
+            | mnemonics::SKIP6
+            | mnemonics::SKIP7
+            | mnemonics::SKIP8
+            | mnemonics::SKIP9 => true,
+            _ => false
+        }
+}
+
 impl From<Mnemonic> for Instruction {
     fn from(c: Mnemonic) -> Self {
         match c {

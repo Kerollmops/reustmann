@@ -1,5 +1,7 @@
 use std::io::{Read, Write};
+use instruction::Instruction;
 use instruction::op_codes::*;
+use instruction::is_valid_mnemonic;
 use memory::{Mnemonics, OpCodes};
 use program::Program;
 use std::u32;
@@ -58,12 +60,16 @@ impl Interpreter {
     /// Copy your program in the memory of the machine, a reset is done after
     /// program was loaded.
     pub fn copy_program(&mut self, program: &Program) -> Result<(), &'static str> {
-        let OpCodes(op_codes) = program.memory().into();
-        if op_codes.len() > self.memory.len() {
+        let mnemos = program.memory();
+        if mnemos.len() > self.memory.len() {
             return Err("Program len is bigger than memory len");
         }
-        for i in 0..op_codes.len() {
-            self.memory[i] = op_codes[i].into();
+        for i in 0..mnemos.len() {
+            let mnemo = mnemos[i] as char;
+            self.memory[i] = match is_valid_mnemonic(mnemo) {
+                true => Into::<Instruction>::into(mnemo).into(),
+                false => mnemo as u8,
+            };
         }
         self.reset();
         Ok(())
@@ -139,11 +145,14 @@ impl Interpreter {
                 Statement(op, true)
             },
             OUT    => {
-                let val = self.memory[self.sp] & 0xff;
+                let val = self.memory[self.sp];
                 let status = match output.write(&[val]) {
                     Err(_) => false,
                     _ => true
                 };
+                // DEBUG
+                // println!("OUT {} => '{}'", val, val as char);
+
                 // output.flush()/* .unwrap() */; // FIXME need this ?
 
                 // if (mExecutionTraceLevel >= 1) {

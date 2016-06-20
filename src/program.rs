@@ -1,9 +1,9 @@
-use memory::Mnemonics;
+use memory::OpCodes;
 use std::io::Read;
 use std::vec::Vec;
 
 /// Give it to the Interpreter !
-pub struct Program(Mnemonics);
+pub struct Program(Vec<u8>);
 
 impl Program {
     /// Construct a new Program from a source.
@@ -19,20 +19,21 @@ impl Program {
 
         let mut instructions = Vec::with_capacity(content.len());
         for c in content {
-            instructions.push(c as char);
+            instructions.push(c);
         }
 
         // FIXME use not_line_ending from nom
         if ignore_last_newline == true {
-            if let Some(&'\n') = instructions.last() { // FIXME '\r\n' for windows
+            let endl = '\n' as u8;
+            if let Some(&endl) = instructions.last() { // FIXME '\r\n' for windows
                 instructions.pop();
             }
         }
-        Ok(Program(Mnemonics(instructions)))
+        Ok(Program(instructions))
     }
 
-    /// Get the Mnemonic representation of the source.
-    pub fn memory(&self) -> &Mnemonics {
+    /// Get the u8 representation of the source.
+    pub fn memory(&self) -> &[u8] {
         &self.0
     }
 }

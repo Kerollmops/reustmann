@@ -101,12 +101,12 @@ impl Interpreter {
 
     #[inline]
     fn decrement_sp(&mut self) {
-        self.pc.wrapping_sub(1) % self.memory.len();
+        self.sp = if self.sp == 0 { self.memory.len() - 1 } else { self.sp - 1 };
     }
 
     #[inline]
     fn increment_sp(&mut self) {
-        self.sp = self.sp.wrapping_add(1) % self.memory.len()
+        self.sp = self.sp.wrapping_add(1) % self.memory.len();
     }
 
     #[inline]
@@ -179,7 +179,7 @@ impl Interpreter {
                 self.decrement_sp();
                 self.memory[self.sp] = tmp;
                 self.set_nz(tmp);
-                self.increment_sp();
+                self.increment_pc();
                 Statement(op, true)
             },
             PUSHPC => {
@@ -198,7 +198,7 @@ impl Interpreter {
             },
             POPSP  => {
                 self.sp = (self.memory[self.sp] as usize) % self.memory.len();
-                self.increment_sp();
+                self.increment_pc();
                 Statement(op, true)
             },
             SPTGT  => {

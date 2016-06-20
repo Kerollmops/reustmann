@@ -36,13 +36,8 @@ fn display_statement(statement: Option<Statement>) {
     match statement {
         Some(statement) => {
             let Statement(op_code, is_success) = statement;
-            if is_valid_op_code(op_code) == true {
-                let name: LongMnemonic = Into::<Instruction>::into(op_code).into();
-                println!("'{}' and return '{}'.", name, is_success);
-            }
-            else {
-                println!("'{}' and return '{}'.", op_code, is_success);
-            }
+            let name: LongMnemonic = Into::<Instruction>::into(op_code).into();
+            println!("'{}' and return '{}'.", name, is_success)
         },
         None => println!("not in this dimension."),
     }
@@ -61,8 +56,15 @@ fn format_program_counter(mem_addr: usize, offset: usize, op_code: OpCode) -> St
     format!("{} <{:+}>: {} ({})", mem_addr, offset, longmnemo, op_code)
 }
 
-fn format_stack_pointer() -> String {
-    format!("{}", "N/A")
+fn format_stack_pointer(mem_addr: usize, value: u8) -> String {
+    let mem_addr = format!(colorify!(blue: "{:>#06x}"), mem_addr);
+    let preview = value as char;
+    if preview.is_alphabetic() == true {
+        format!("{} ({:#04x}, '{}')", mem_addr, value, preview)
+    }
+    else {
+        format!("{} ({:#04x})", mem_addr, value)
+    }
 }
 
 // FIXME move this elsewhere
@@ -71,20 +73,25 @@ fn display_infos(debug_infos: &DebugInfos, statement: Option<Statement>) {
     println!("pc: {}, sp: {}, nz: {}", pc, sp, nz);
     display_statement(statement);
 
+    // FIXME don't zip, display different number of stack/instructions
     let lines = 10;
-    let mut instrs = (*memory).iter().enumerate().cycle().skip(pc).take(lines).enumerate();
-    let mut stack = (*memory).iter().rev().enumerate().cycle().skip(sp).take(lines);
-    if let Some((idx, (mem_addr, op_code))) = instrs.next() {
-        let pc_side = format_program_counter(mem_addr, idx, *op_code);
+
+    let instrs = (*memory).iter().enumerate().cycle().skip(pc).take(lines).enumerate();
+    let stack = (*memory).iter().enumerate().rev().cycle().skip((*memory).len() - sp - 1).take(lines); // FIXME ugly ?
+    let mut pc_sp = instrs.zip(stack);
+
+    if let Some(((idx, (pc_addr, op_code)), (sp_addr, value))) = pc_sp.next() {
+        let pc_side = format_program_counter(pc_addr, idx, *op_code);
         let pc_side = format!("{} {}", colorify!(red: "pc"), pc_side);
-        let sp_side = format_stack_pointer();
+        let sp_side = format_stack_pointer(sp_addr, *value);
         let sp_side = format!("{} {}", colorify!(red: "sp"), sp_side);
         println!("{}    {}", pc_side, sp_side);
     }
-    for (idx, (mem_addr, op_code)) in instrs {
-        let pc_side = format_program_counter(mem_addr, idx, *op_code);
+
+    for ((idx, (pc_addr, op_code)), (sp_addr, value)) in pc_sp {
+        let pc_side = format_program_counter(pc_addr, idx, *op_code);
         let pc_side = format!("   {}", pc_side);
-        let sp_side = format_stack_pointer();
+        let sp_side = format_stack_pointer(sp_addr, *value);
         let sp_side = format!("   {}", sp_side);
         println!("{}    {}", pc_side, sp_side);
     }
@@ -101,8 +108,8 @@ fn main() {
 
     let mut last_command = None;
 
-    let arch_length = 10; // TODO get input source length by default
-    let arch_width = 8;
+    let arch_width = 8; // TODO get input source length by default
+    let arch_length = 50;
     // FIXME don't unwrap
     let mut dbg = match Debugger::new(arch_length, arch_width) {
         Err(err) => {
@@ -114,8 +121,10 @@ fn main() {
 
     // TODO make it clearer/beautiful
     printlnc!(yellow: "Interpreter informations:");
-    printlnc!(yellow: "Arch width: {:>2}", arch_width);
-    printlnc!(yellow: "Arch length: {:>2}", arch_length);
+    printlnc!(yellow: "Arch width:  {}", arch_width);
+    printlnc!(yellow: "Arch length: {}", arch_length);
+
+    // Interpreter as an arch width of 8 and an arch length of 6.
 
     let mut input = empty();
     // let mut output = sink();

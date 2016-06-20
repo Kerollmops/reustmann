@@ -182,36 +182,270 @@ impl Interpreter {
                 self.increment_sp();
                 Statement(op, true)
             },
-            PUSHPC => { self.execute(NOP, input, output); Statement(op, true) },
-            POPPC  => { self.execute(NOP, input, output); Statement(op, true) },
-            POPSP  => { self.execute(NOP, input, output); Statement(op, true) },
-            SPTGT  => { self.execute(NOP, input, output); Statement(op, true) },
-            PUSHNZ => { self.execute(NOP, input, output); Statement(op, true) },
-            SWAP   => { self.execute(NOP, input, output); Statement(op, true) },
-            PUSH0  => { self.execute(NOP, input, output); Statement(op, true) },
-            ADD    => { self.execute(NOP, input, output); Statement(op, true) },
-            SUB    => { self.execute(NOP, input, output); Statement(op, true) },
-            INC    => { self.execute(NOP, input, output); Statement(op, true) },
-            DEC    => { self.execute(NOP, input, output); Statement(op, true) },
-            MUL    => { self.execute(NOP, input, output); Statement(op, true) },
-            DIV    => { self.execute(NOP, input, output); Statement(op, true) },
-            XOR    => { self.execute(NOP, input, output); Statement(op, true) },
-            AND    => { self.execute(NOP, input, output); Statement(op, true) },
-            OR     => { self.execute(NOP, input, output); Statement(op, true) },
-            SHL    => { self.execute(NOP, input, output); Statement(op, true) },
-            SHR    => { self.execute(NOP, input, output); Statement(op, true) },
-            NOT    => { self.execute(NOP, input, output); Statement(op, true) },
-            BZ     => { self.execute(NOP, input, output); Statement(op, true) },
-            BNZ    => { self.execute(NOP, input, output); Statement(op, true) },
-            BEQ    => { self.execute(NOP, input, output); Statement(op, true) },
-            BGT    => { self.execute(NOP, input, output); Statement(op, true) },
-            BLT    => { self.execute(NOP, input, output); Statement(op, true) },
-            BGE    => { self.execute(NOP, input, output); Statement(op, true) },
-            LOOP   => { self.execute(NOP, input, output); Statement(op, true) },
-            ENDL   => { self.execute(NOP, input, output); Statement(op, true) },
-            BRAN   => { self.execute(NOP, input, output); Statement(op, true) },
-            BRAP   => { self.execute(NOP, input, output); Statement(op, true) },
-            TARGET => { self.execute(NOP, input, output); Statement(op, true) },
+            PUSHPC => {
+                // let val = self.trunc(self.pc);
+                let val = self.pc as u8; // FIXME use trunc
+                self.decrement_sp();
+                self.memory[self.sp] = val;
+                self.set_nz(val);
+                self.increment_pc();
+                Statement(op, true)
+            },
+            POPPC  => {
+                self.pc = (self.memory[self.sp] as usize) % self.memory.len();
+                self.increment_sp();
+                Statement(op, true)
+            },
+            POPSP  => {
+                self.sp = (self.memory[self.sp] as usize) % self.memory.len();
+                self.increment_sp();
+                Statement(op, true)
+            },
+            SPTGT  => {
+                // find the next TARGET
+                if self.pc < self.memory.len() - 1 {
+                    for i in self.pc + 1..self.memory.len() {
+                        if self.memory[i] == TARGET {
+                            self.sp = i;
+                            break;
+                        }
+                    }
+                }
+                self.increment_pc();
+                Statement(op, true)
+            },
+            PUSHNZ => {
+                let val = self.nz as u8;
+                self.decrement_sp();
+                self.memory[self.sp] = val;
+                self.set_nz(val);
+                self.increment_pc();
+                Statement(op, true)
+            },
+            SWAP   => {
+                let tmp = self.memory[self.sp];
+                let arch_len = self.memory.len();
+                self.memory[self.sp] = self.memory[(self.sp + 1) % arch_len];
+                self.memory[(self.sp + 1) % arch_len] = tmp;
+                self.increment_pc();
+                Statement(op, true)
+            },
+            PUSH0  => {
+                self.decrement_sp();
+                let val = 0;
+                self.memory[self.sp] = val;
+                self.set_nz(val);
+                self.increment_pc();
+                Statement(op, true)
+            },
+            ADD    => {
+                self.decrement_sp();
+                let a = self.memory[(self.sp + 2) % self.memory.len()];
+                let b = self.memory[(self.sp + 1) % self.memory.len()];
+                let val = a + b;
+                self.memory[self.sp] = val;
+                self.set_nz(val);
+                self.increment_pc();
+                Statement(op, true)
+            },
+            SUB    => {
+                self.decrement_sp();
+                let a = self.memory[(self.sp + 2) % self.memory.len()];
+                let b = self.memory[(self.sp + 1) % self.memory.len()];
+                let val = a - b;
+                self.memory[self.sp] = val;
+                self.set_nz(val);
+                self.increment_pc();
+                Statement(op, true)
+            },
+            INC    => {
+                let val = self.memory[self.sp].wrapping_add(1);
+                self.memory[self.sp] = val;
+                self.set_nz(val);
+                self.increment_pc();
+                Statement(op, true)
+            },
+            DEC    => {
+                let val = self.memory[self.sp].wrapping_sub(1);
+                self.memory[self.sp] = val;
+                self.set_nz(val);
+                self.increment_pc();
+                Statement(op, true)
+            },
+            MUL    => {
+                self.decrement_sp();
+                let a = self.memory[(self.sp + 2) % self.memory.len()];
+                let b = self.memory[(self.sp + 1) % self.memory.len()];
+                let val = a * b;
+                self.memory[self.sp] = val;
+                self.set_nz(val);
+                self.increment_pc();
+                Statement(op, true)
+            },
+            DIV    => {
+                self.decrement_sp();
+                let a = self.memory[(self.sp + 2) % self.memory.len()];
+                let b = self.memory[(self.sp + 1) % self.memory.len()];
+                let val = if b != 0 { a / b } else { u8::max_value() };
+                self.memory[self.sp] = val;
+                self.set_nz(val);
+                self.increment_pc();
+                Statement(op, true)
+            },
+            XOR    => {
+                self.decrement_sp();
+                let a = self.memory[(self.sp + 2) % self.memory.len()];
+                let b = self.memory[(self.sp + 1) % self.memory.len()];
+                let val = a ^ b;
+                self.memory[self.sp] = val;
+                self.set_nz(val);
+                self.increment_pc();
+                Statement(op, true)
+            },
+            AND    => {
+                self.decrement_sp();
+                let a = self.memory[(self.sp + 2) % self.memory.len()];
+                let b = self.memory[(self.sp + 1) % self.memory.len()];
+                let val = a & b;
+                self.memory[self.sp] = val;
+                self.set_nz(val);
+                self.increment_pc();
+                Statement(op, true)
+            },
+            OR     => {
+                self.decrement_sp();
+                let a = self.memory[(self.sp + 2) % self.memory.len()];
+                let b = self.memory[(self.sp + 1) % self.memory.len()];
+                let val = a | b;
+                self.memory[self.sp] = val;
+                self.set_nz(val);
+                self.increment_pc();
+                Statement(op, true)
+            },
+            SHL    => {
+                let val = self.memory[self.sp] << 1;
+                self.memory[self.sp] = val;
+                self.set_nz(val);
+                self.increment_pc();
+                Statement(op, true)
+            },
+            SHR    => {
+                let val = self.memory[self.sp] >> 1;
+                self.memory[self.sp] = val;
+                self.set_nz(val);
+                self.increment_pc();
+                Statement(op, true)
+            },
+            NOT    => {
+                let val = !self.memory[self.sp];
+                self.memory[self.sp] = val;
+                self.set_nz(val);
+                self.increment_pc();
+                Statement(op, true)
+            },
+            BZ     => {
+                self.increment_pc();
+                if self.nz == false {
+                    self.increment_pc();
+                }
+                Statement(op, true)
+            },
+            BNZ    => {
+                self.increment_pc();
+                if self.nz == true {
+                    self.increment_pc();
+                }
+                Statement(op, true)
+            },
+            BEQ    => {
+                self.increment_pc();
+                let a = self.memory[(self.sp + 1) % self.memory.len()];
+                let b = self.memory[self.sp];
+                if a == b {
+                    self.increment_pc();
+                }
+                Statement(op, true)
+            },
+            BGT    => {
+                self.increment_pc();
+                let a = self.memory[(self.sp + 1) % self.memory.len()];
+                let b = self.memory[self.sp];
+                if a > b {
+                    self.increment_pc();
+                }
+                Statement(op, true)
+            },
+            BLT    => {
+                self.increment_pc();
+                let a = self.memory[(self.sp + 1) % self.memory.len()];
+                let b = self.memory[self.sp];
+                if a < b {
+                    self.increment_pc();
+                }
+                Statement(op, true)
+            },
+            BGE    => { // FIXME add BLE
+                self.increment_pc();
+                let a = self.memory[(self.sp + 1) % self.memory.len()];
+                let b = self.memory[self.sp];
+                if a >= b {
+                    self.increment_pc();
+                }
+                Statement(op, true)
+            },
+            LOOP   => {
+                // logic is in the EndL opcode
+                self.increment_pc();
+                Statement(op, true)
+            },
+            ENDL   => {
+                // find the preceding LOOP
+                let mut found = false;
+                for i in self.pc..0 {
+                    if self.memory[i] == LOOP {
+                        self.pc = (i + 1) % self.memory.len();
+                        found = true;
+                        break;
+                    }
+                }
+                if found == false {
+                    self.increment_pc();
+                }
+                Statement(op, true)
+            },
+            BRAN   => {
+                // find the next TARGET
+                let mut found = false;
+                if self.pc < self.memory.len() - 1 {
+                    for i in self.pc + 1..self.memory.len() {
+                        if self.memory[i] == TARGET {
+                            self.sp = i;
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                if found == false {
+                    self.increment_pc();
+                }
+                Statement(op, true)
+            },
+            BRAP   => {
+                // find the preceding TARGET
+                let mut found = false;
+                for i in self.pc..0 {
+                    if self.memory[i] == TARGET {
+                        self.pc = (i + 1) % self.memory.len();
+                        found = true;
+                        break;
+                    }
+                }
+                if found == false {
+                    self.increment_pc();
+                }
+                Statement(op, true)
+            },
+            TARGET => { self.increment_pc(); Statement(op, true) },
             SKIP1  => { self.increment_pc_n(2); Statement(op, true) },
             SKIP2  => { self.increment_pc_n(3); Statement(op, true) },
             SKIP3  => { self.increment_pc_n(4); Statement(op, true) },

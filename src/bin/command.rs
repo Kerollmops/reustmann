@@ -59,7 +59,7 @@ named!(
 named!(
     step<Command>,
     chain!(
-        alt_complete!(tag!("step") | tag!("s")) ~
+        alt_complete!(tag!("step") | tag!("next") | tag!("s") | tag!("n")) ~
             count: opt!(preceded!(space, usize_parser)),
         || Command::Step(count.unwrap_or(1))
     )

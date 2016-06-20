@@ -51,35 +51,45 @@ fn display_statement(statement: Option<Statement>) {
     }
 }
 
-fn format_intruction(mem_addr: usize, offset: usize, instr: Instruction) -> String {
-    let mnemo: Mnemonic = instr.into();
-    let op_code: OpCode = instr.into();
+fn format_program_counter(mem_addr: usize, offset: usize, op_code: OpCode) -> String {
+    let instr: Instruction = op_code.into();
     let longmnemo: LongMnemonic = instr.into();
     let mem_addr = format!(colorify!(blue: "{:>#06x}"), mem_addr);
+    let longmnemo = format!(colorify!(green: "{:<6}"), longmnemo);
 
-    format!("{} <{:+}>: {} ({:^#4x}) {}", mem_addr, offset, mnemo, op_code, longmnemo)
+    let op_code = match is_valid_op_code(op_code) {
+        true => format!("{:#04x}, '{}'", op_code, Into::<Mnemonic>::into(instr)),
+        false => format!("{:#04x}, '{}'", op_code, Into::<char>::into(instr)),
+    };
+    format!("{} <{:+}>: {} ({})", mem_addr, offset, longmnemo, op_code)
+}
+
+fn format_stack_pointer() -> String {
+    format!("{}", "N/A")
 }
 
 // FIXME move this elsewhere
 fn display_infos(debug_infos: &DebugInfos, statement: Option<Statement>) {
     let &DebugInfos{ ref memory, pc, sp, nz } = debug_infos;
-    // TODO #[macro_use] extern crate colorify;
     println!("pc: {}, sp: {}, nz: {}", pc, sp, nz);
     display_statement(statement);
-    // let instrs = (*memory).iter().skip(pc).cycle().take(10).cloned().intersperse(' ');
-    // let string = String::from_iter(instrs);
-    // println!("{}", string);
 
-    let mut instrs = (*memory).iter().skip(pc).cycle().take(10).enumerate();
-    // display pc in red !
-    if let Some((idx, instr)) = instrs.next() {
-        let instr: Instruction = (*instr).into();
-        let details = format_intruction(idx + pc, idx, instr); // FIXME wrong mem_addr !!!
-        println!("{} {}", colorify!(red: "->"), details);
+    let mut instrs = (*memory).iter().enumerate().cycle().skip(pc).take(10).enumerate();
+    if let Some((idx, (mem_addr, op_code))) = instrs.next() {
+        // FIXME wrong mem_addr !!!
+        let pc_side = format_program_counter(mem_addr, idx, *op_code);
+        let pc_side = format!("{} {}", colorify!(red: "pc"), pc_side);
+        let sp_side = format_stack_pointer();
+        let sp_side = format!("{} {}", colorify!(red: "sp"), sp_side);
+        println!("{}    {}", pc_side, sp_side);
     }
-    for (idx, instr) in instrs {
-        let instr: Instruction = (*instr).into();
-        println!("   {}", format_intruction(idx + pc, idx, instr)); // FIXME wrong mem_addr !!!
+    for (idx, (mem_addr, op_code)) in instrs {
+        // FIXME wrong mem_addr !!!
+        let pc_side = format_program_counter(mem_addr, idx, *op_code);
+        let pc_side = format!("   {}", pc_side);
+        let sp_side = format_stack_pointer();
+        let sp_side = format!("   {}", sp_side);
+        println!("{}    {}", pc_side, sp_side);
     }
 }
 
@@ -94,7 +104,7 @@ fn main() {
 
     let mut last_command = None;
 
-    let arch_length = 50; // TODO get input source length by default
+    let arch_length = 10; // TODO get input source length by default
     let arch_width = 8;
     // FIXME don't unwrap
     let mut dbg = match Debugger::new(arch_length, arch_width) {

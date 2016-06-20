@@ -14,7 +14,7 @@ pub struct Statement(pub OpCode, pub ExecutionSucceeded);
 /// A Debug structure to help debugging :)
 // #[derive(Debug)] // TODO !!!
 pub struct DebugInfos {
-    pub memory: Mnemonics,
+    pub memory: OpCodes,
     pub pc: usize,
     pub sp: usize,
     pub nz: bool
@@ -227,7 +227,7 @@ impl Interpreter {
     /// Get a debug struct that can help for debugging programs
     pub fn debug_infos(&self) -> DebugInfos {
        DebugInfos {
-            memory: OpCodes(self.memory.clone()).into(),
+            memory: OpCodes(self.memory.clone()),
             pc: self.pc,
             sp: self.sp,
             nz: self.nz

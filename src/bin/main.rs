@@ -14,7 +14,7 @@ use rustyline::completion::FilenameCompleter;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 use reustmann::{DebugInfos, Statement}; // FIXME move this elsewhere
-use reustmann::instruction::{ Instruction, LongMnemonic, is_valid_op_code};
+use reustmann::instruction::{ Instruction, LongMnemonic, Mnemonic, OpCode, is_valid_op_code};
 use std::iter::FromIterator;
 use itertools::Itertools;
 use command::Command;
@@ -51,15 +51,36 @@ fn display_statement(statement: Option<Statement>) {
     }
 }
 
+fn format_intruction(mem_addr: usize, offset: usize, instr: Instruction) -> String {
+    let mnemo: Mnemonic = instr.into();
+    let op_code: OpCode = instr.into();
+    let longmnemo: LongMnemonic = instr.into();
+    let mem_addr = format!(colorify!(blue: "{:>#06x}"), mem_addr);
+
+    format!("{} <{:+}>: {} ({:^#4x}) {}", mem_addr, offset, mnemo, op_code, longmnemo)
+}
+
 // FIXME move this elsewhere
 fn display_infos(debug_infos: &DebugInfos, statement: Option<Statement>) {
     let &DebugInfos{ ref memory, pc, sp, nz } = debug_infos;
     // TODO #[macro_use] extern crate colorify;
     println!("pc: {}, sp: {}, nz: {}", pc, sp, nz);
     display_statement(statement);
-    let instrs = (*memory).iter().skip(pc).cycle().take(10).cloned().intersperse(' ');
-    let string = String::from_iter(instrs);
-    println!("{}", string);
+    // let instrs = (*memory).iter().skip(pc).cycle().take(10).cloned().intersperse(' ');
+    // let string = String::from_iter(instrs);
+    // println!("{}", string);
+
+    let mut instrs = (*memory).iter().skip(pc).cycle().take(10).enumerate();
+    // display pc in red !
+    if let Some((idx, instr)) = instrs.next() {
+        let instr: Instruction = (*instr).into();
+        let details = format_intruction(idx + pc, idx, instr); // FIXME wrong mem_addr !!!
+        println!("{} {}", colorify!(red: "->"), details);
+    }
+    for (idx, instr) in instrs {
+        let instr: Instruction = (*instr).into();
+        println!("   {}", format_intruction(idx + pc, idx, instr)); // FIXME wrong mem_addr !!!
+    }
 }
 
 fn main() {
@@ -84,7 +105,7 @@ fn main() {
         Ok(dbg) => dbg,
     };
 
-    // TODO make it clear and beautiful
+    // TODO make it clearer/beautiful
     printlnc!(yellow: "Interpreter informations:");
     printlnc!(yellow: "Arch width: {:>2}", arch_width);
     printlnc!(yellow: "Arch length: {:>2}", arch_length);

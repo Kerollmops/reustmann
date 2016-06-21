@@ -20,6 +20,11 @@ use reustmann::Program;
 
 const DEFAULT_ARCH_WIDTH: usize = 8;
 
+// FIXME found something better ???
+fn is_visible(c: u8) -> bool {
+    c >= 32 && c <= 126
+}
+
 fn create_program_from_file(filename: &String, ignore_nl: bool) -> Result<Program, String> {
     let mut file = match File::open(filename) {
         Err(err) => return Err(err.description().into()),
@@ -45,19 +50,24 @@ fn format_program_counter(mem_addr: usize, offset: usize, op_code: OpCode) -> St
     let instr: Instruction = op_code.into();
     let longmnemo: LongMnemonic = instr.into();
     let mem_addr = format!(colorify!(blue: "{:>#06x}"), mem_addr);
-    let longmnemo = format!(colorify!(green: "{:<6}"), longmnemo);
 
-    let op_code = match is_valid_op_code(op_code) {
-        true => format!("{:#04x}, '{}'", op_code, Into::<Mnemonic>::into(instr)),
-        false => format!("{:#04x}, '{}'", op_code, op_code as char),
+    let (op_code, longmnemo) = if is_valid_op_code(op_code) {
+        let op = format!("{:#04x},  {} ", op_code, Into::<Mnemonic>::into(instr));
+        let name = format!(colorify!(green: "{:<6}"), longmnemo);
+        (op, name)
+    } else {
+        let op = format!("{:#04x}, '{}'", op_code, op_code as char);
+        let name = format!(colorify!(red: "{:<6}"), longmnemo);
+        (op, name)
     };
+
     format!("{} <{:+}>: {} ({})", mem_addr, offset, longmnemo, op_code)
 }
 
 fn format_stack_pointer(mem_addr: usize, value: u8) -> String {
     let mem_addr = format!(colorify!(blue: "{:>#06x}"), mem_addr);
-    let preview = value as char;
-    if preview.is_alphabetic() == true {
+    if is_visible(value) == true {
+        let preview = value as char;
         format!("{} ({:#04x}, '{}')", mem_addr, value, preview)
     }
     else {
@@ -66,7 +76,13 @@ fn format_stack_pointer(mem_addr: usize, value: u8) -> String {
 }
 
 // FIXME move this elsewhere
-fn display_infos(debug_infos: &DebugInfos, statement: Option<Statement>) {
+fn display_infos(debug_infos: &DebugInfos, statement: Option<Statement>, output: &Vec<u8>) {
+
+    // if let Some(output) = output {
+        let output = String::from_utf8_lossy(&output);
+        println!("Output({}): '{}'", output.len(), output);
+    // }
+
     let &DebugInfos{ ref memory, pc, sp, nz } = debug_infos;
     println!("pc: {}, sp: {}, nz: {}", pc, sp, nz);
     display_statement(statement);
@@ -75,7 +91,7 @@ fn display_infos(debug_infos: &DebugInfos, statement: Option<Statement>) {
     let lines = 10;
 
     let instrs = (*memory).iter().enumerate().cycle().skip(pc).take(lines).enumerate();
-    let stack = (*memory).iter().enumerate().rev().cycle().skip((*memory).len() - sp - 1).take(lines); // FIXME ugly ?
+    let stack = (*memory).iter().enumerate().cycle().skip(sp).take(lines);
     let mut pc_sp = instrs.zip(stack);
 
     if let Some(((idx, (pc_addr, op_code)), (sp_addr, value))) = pc_sp.next() {
@@ -111,6 +127,7 @@ fn main() {
         printlnc!(yellow: "No previous history.");
     }
 
+    let mut program_in_execution = None;
     let mut last_command = None;
     let mut dbg = Debugger::new(); // FIXME use default
 
@@ -118,9 +135,10 @@ fn main() {
         display_interpreter_properties(interpreter);
     }
 
-    let mut input = empty();
+    // let mut input = empty();
+    let mut input = "\x02Hello".as_bytes();
     // let mut output = sink();
-    let mut output = std::io::stdout();
+    let mut output = Vec::new();
 
     let mut statement = None;
 
@@ -163,12 +181,16 @@ fn main() {
                         }
                     }
                     Ok(Command::Infos) => {
+                        if let Some(ref filename) = program_in_execution {
+                            println!("Program in execution: '{}'.", filename);
+                        }
                         match dbg.debug_infos() {
-                            Ok(debug) => display_infos(&debug, statement),
+                            Ok(debug) => display_infos(&debug, statement, &output),
                             Err(err) => printlnc!(red: "{}", err),
                         }
                     },
                     Ok(Command::Copy(ref filename, ignore_nl)) => {
+                        program_in_execution = Some(filename.clone());
                         match create_program_from_file(&filename, ignore_nl) {
                             Err(err) => printlnc!(red: "{}", err),
                             Ok(program) => {
@@ -186,14 +208,14 @@ fn main() {
                                         }
                                         dbg.copy_program_and_reset(&program).unwrap();
                                         match dbg.debug_infos() {
-                                            Ok(debug) => display_infos(&debug, statement),
+                                            Ok(debug) => display_infos(&debug, statement, &output),
                                             Err(err) => printlnc!(red: "{}", err),
                                         }
                                     },
                                     Ok(_) => {
                                         printlnc!(yellow: "Program correctly loaded.");
                                         match dbg.debug_infos() {
-                                            Ok(debug) => display_infos(&debug, statement),
+                                            Ok(debug) => display_infos(&debug, statement, &output),
                                             Err(err) => printlnc!(red: "{}", err),
                                         }
                                     },
@@ -207,7 +229,7 @@ fn main() {
                                 printlnc!(yellow: "Reset.");
                                 statement = Some(stat);
                                 match dbg.debug_infos() {
-                                    Ok(debug) => display_infos(&debug, statement),
+                                    Ok(debug) => display_infos(&debug, statement, &output),
                                     Err(err) => printlnc!(red: "{}", err),
                                 }
                             },
@@ -222,7 +244,7 @@ fn main() {
                                     true => printlnc!(yellow: "{} steps executed.", executed),
                                     false => printlnc!(yellow: "{}/{} steps executed.", executed, to_execute),
                                 }
-                                display_infos(&debug, statement)
+                                display_infos(&debug, statement, &output)
                             },
                             Err(err) => printlnc!(red: "{}", err),
                         }

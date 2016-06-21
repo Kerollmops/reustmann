@@ -1,4 +1,5 @@
 use std::io::{Read, Write};
+use std::cmp::min;
 use instruction::Instruction;
 use instruction::op_codes::*;
 use instruction::is_valid_mnemonic;
@@ -16,6 +17,7 @@ pub struct Statement(pub OpCode, pub ExecutionSucceeded);
 /// A Debug structure to help debugging :)
 // #[derive(Debug)] // TODO !!!
 pub struct DebugInfos {
+    pub number_of_cycles: usize,
     pub memory: OpCodes,
     pub pc: usize,
     pub sp: usize,
@@ -25,6 +27,7 @@ pub struct DebugInfos {
 /// The main interpreter, execute instructions, read from input,
 /// write to output
 pub struct Interpreter {
+    number_of_cycles: usize,
     arch_width: u8,      // [6..32)
     memory: Vec<OpCode>, // [1..2^32)
     pc: usize,
@@ -49,6 +52,7 @@ impl Interpreter {
             memory.push(NOP);
         }
         Ok(Interpreter {
+            number_of_cycles: 0,
             arch_width: arch_width as u8,
             memory: memory,
             pc: 0,
@@ -61,7 +65,7 @@ impl Interpreter {
     /// program was loaded.
     pub fn copy_program(&mut self, program: &Program) {
         let mnemos = program.memory();
-        for i in 0..mnemos.len() {
+        for i in 0..min(mnemos.len(), mnemos.len()) {
             let mnemo = mnemos[i] as char;
             self.memory[i] = if is_valid_mnemonic(mnemo) {
                 Into::<Instruction>::into(mnemo).into()
@@ -224,7 +228,7 @@ impl Interpreter {
                 self.decrement_sp();
                 let a = self.memory[(self.sp + 2) % self.memory.len()];
                 let b = self.memory[(self.sp + 1) % self.memory.len()];
-                let val = a + b;
+                let val = a.wrapping_add(b);
                 self.memory[self.sp] = val;
                 self.set_nz(val);
                 self.increment_pc();
@@ -234,7 +238,7 @@ impl Interpreter {
                 self.decrement_sp();
                 let a = self.memory[(self.sp + 2) % self.memory.len()];
                 let b = self.memory[(self.sp + 1) % self.memory.len()];
-                let val = a - b;
+                let val = a.wrapping_sub(b);
                 self.memory[self.sp] = val;
                 self.set_nz(val);
                 self.increment_pc();
@@ -258,7 +262,7 @@ impl Interpreter {
                 self.decrement_sp();
                 let a = self.memory[(self.sp + 2) % self.memory.len()];
                 let b = self.memory[(self.sp + 1) % self.memory.len()];
-                let val = a * b;
+                let val = a.wrapping_mul(b);
                 self.memory[self.sp] = val;
                 self.set_nz(val);
                 self.increment_pc();
@@ -268,7 +272,7 @@ impl Interpreter {
                 self.decrement_sp();
                 let a = self.memory[(self.sp + 2) % self.memory.len()];
                 let b = self.memory[(self.sp + 1) % self.memory.len()];
-                let val = if b != 0 { a / b } else { u8::max_value() };
+                let val = if b != 0 { a.wrapping_div(b) } else { u8::max_value() };
                 self.memory[self.sp] = val;
                 self.set_nz(val);
                 self.increment_pc();
@@ -479,12 +483,14 @@ impl Interpreter {
     /// if you don't want to give input and/or output.
     pub fn step<R: Read, W: Write>(&mut self, input: &mut R, output: &mut W) -> Statement {
         let instr = self.memory[self.pc];
+        self.number_of_cycles += 1;
         self.execute(instr, input, output)
     }
 
     /// Get a debug struct that can help for debugging programs
     pub fn debug_infos(&self) -> DebugInfos {
        DebugInfos {
+            number_of_cycles: self.number_of_cycles,
             memory: OpCodes(self.memory.clone()),
             pc: self.pc,
             sp: self.sp,

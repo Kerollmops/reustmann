@@ -83,8 +83,8 @@ fn display_infos(debug_infos: &DebugInfos, statement: Option<Statement>, output:
         println!("Output({}): '{}'", output.len(), output);
     // }
 
-    let &DebugInfos{ ref memory, pc, sp, nz } = debug_infos;
-    println!("pc: {}, sp: {}, nz: {}", pc, sp, nz);
+    let &DebugInfos{ number_of_cycles, ref memory, pc, sp, nz } = debug_infos;
+    println!("cycles: {}, pc: {}, sp: {}, nz: {}", number_of_cycles, pc, sp, nz);
     display_statement(statement);
 
     // FIXME don't zip, display different number of stack/instructions
@@ -136,7 +136,7 @@ fn main() {
     }
 
     // let mut input = empty();
-    let mut input = "\x02Hello".as_bytes();
+    let mut input = "\nHello".as_bytes();
     // let mut output = sink();
     let mut output = Vec::new();
 

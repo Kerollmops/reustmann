@@ -427,17 +427,50 @@ impl Interpreter {
                 }
                 Statement(op, true)
             },
-            TARGET => { self.increment_pc(); Statement(op, true) },
-            SKIP1 => { self.increment_pc_n(2); Statement(op, true) },
-            SKIP2 => { self.increment_pc_n(3); Statement(op, true) },
-            SKIP3 => { self.increment_pc_n(4); Statement(op, true) },
-            SKIP4 => { self.increment_pc_n(5); Statement(op, true) },
-            SKIP5 => { self.increment_pc_n(6); Statement(op, true) },
-            SKIP6 => { self.increment_pc_n(7); Statement(op, true) },
-            SKIP7 => { self.increment_pc_n(8); Statement(op, true) },
-            SKIP8 => { self.increment_pc_n(9); Statement(op, true) },
-            SKIP9 => { self.increment_pc_n(10); Statement(op, true) },
-            NOP | _ => { self.increment_pc(); Statement(op, true) }, // FIXME return false if not NOP directly ?
+            TARGET => {
+                self.increment_pc();
+                Statement(op, true)
+            },
+            SKIP1 => {
+                self.increment_pc_n(2);
+                Statement(op, true)
+            },
+            SKIP2 => {
+                self.increment_pc_n(3);
+                Statement(op, true)
+            },
+            SKIP3 => {
+                self.increment_pc_n(4);
+                Statement(op, true)
+            },
+            SKIP4 => {
+                self.increment_pc_n(5);
+                Statement(op, true)
+            },
+            SKIP5 => {
+                self.increment_pc_n(6);
+                Statement(op, true)
+            },
+            SKIP6 => {
+                self.increment_pc_n(7);
+                Statement(op, true)
+            },
+            SKIP7 => {
+                self.increment_pc_n(8);
+                Statement(op, true)
+            },
+            SKIP8 => {
+                self.increment_pc_n(9);
+                Statement(op, true)
+            },
+            SKIP9 => {
+                self.increment_pc_n(10);
+                Statement(op, true)
+            },
+            NOP | _ => {
+                self.increment_pc();
+                Statement(op, true)
+            },
         }
     }
 

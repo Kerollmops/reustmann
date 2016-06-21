@@ -4,6 +4,12 @@ use nom::{IResult, eof, space, digit, alphanumeric, is_space};
 
 #[derive(Debug, Clone)]
 pub enum Command {
+    UnsetInterpreter,
+    SetInterpreter {
+        arch_length: usize,
+        arch_width: usize
+    },
+    InfosInterpreter,
     Infos,
     Copy(String, bool), // FIXME use Cow like in rustendo64
     Reset,
@@ -17,6 +23,9 @@ named!(
     chain!(
         c: alt_complete!(
             exit |
+            set_interpreter |
+            unset_interpreter |
+            infos_interpreter |
             infos |
             copy |
             reset |
@@ -25,6 +34,35 @@ named!(
         ) ~
         eof, // force eof after matching command
         || c
+    )
+);
+
+named!(
+    infos_interpreter<Command>,
+    map!(
+        alt_complete!(tag!("interpreter") | tag!("inter")),
+        |_|  Command::InfosInterpreter
+    )
+);
+
+named!(
+    unset_interpreter<Command>,
+    map!(
+        alt_complete!(tag!("unset_interpreter") | tag!("unsetinter") | tag!("unsetint")),
+        |_|  Command::UnsetInterpreter
+    )
+);
+
+named!(
+    set_interpreter<Command>,
+    chain!(
+        alt_complete!(tag!("set_interpreter") | tag!("interpreter") | tag!("setint")) ~
+            length: preceded!(space, usize_parser) ~
+            width: preceded!(space, usize_parser),
+        ||  Command::SetInterpreter {
+                arch_length: length,
+                arch_width: width,
+            }
     )
 );
 

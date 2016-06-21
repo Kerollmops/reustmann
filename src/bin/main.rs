@@ -12,11 +12,13 @@ use std::fs::File;
 use rustyline::completion::FilenameCompleter;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
-use reustmann::{DebugInfos, Statement}; // FIXME move this elsewhere
+use reustmann::{DebugInfos, Statement, Interpreter}; // FIXME move this elsewhere
 use reustmann::instruction::{ Instruction, LongMnemonic, Mnemonic, OpCode, is_valid_op_code};
 use command::Command;
 use debugger::Debugger;
 use reustmann::Program;
+
+const DEFAULT_ARCH_WIDTH: usize = 8;
 
 fn create_program_from_file(filename: &String, ignore_nl: bool) -> Result<Program, String> {
     let mut file = match File::open(filename) {
@@ -93,6 +95,13 @@ fn display_infos(debug_infos: &DebugInfos, statement: Option<Statement>) {
     }
 }
 
+fn display_interpreter_properties(interpreter: &Interpreter) {
+    println!("Interpreter as an arch width of {} and an arch length of {}.",
+        format!(colorify!(yellow: "{}"), interpreter.arch_width()),
+        format!(colorify!(yellow: "{}"), interpreter.arch_length())
+    );
+}
+
 fn main() {
     let file_comp = FilenameCompleter::new();
     let mut rustyline = Editor::new();
@@ -103,22 +112,11 @@ fn main() {
     }
 
     let mut last_command = None;
+    let mut dbg = Debugger::new(); // FIXME use default
 
-    let arch_width = 8; // TODO get input source length by default
-    let arch_length = 50;
-    // FIXME don't unwrap
-    let mut dbg = match Debugger::new(arch_length, arch_width) {
-        Err(err) => {
-            printlnc!(red: "{}", err);
-            std::process::exit(1)
-        },
-        Ok(dbg) => dbg,
-    };
-
-    println!("Interpreter as an arch width of {} and an arch length of {}.",
-        format!(colorify!(yellow: "{}"), arch_width),
-        format!(colorify!(yellow: "{}"), arch_length)
-    );
+    if let Ok(ref interpreter) = dbg.interpreter() {
+        display_interpreter_properties(interpreter);
+    }
 
     let mut input = empty();
     // let mut output = sink();
@@ -141,34 +139,93 @@ fn main() {
                 };
 
                 match command {
-                    Ok(Command::Infos) => display_infos(&dbg.debug_infos(), statement),
+                    Ok(Command::UnsetInterpreter) => {
+                        match dbg.unset_interpreter() {
+                            Ok(_) => printlnc!(yellow: "Interpreter correctly unset."),
+                            Err(err) => printlnc!(red: "{}", err),
+                        }
+                    }
+                    Ok(Command::InfosInterpreter) => {
+                        match dbg.interpreter() {
+                            Ok(interpreter) => display_interpreter_properties(interpreter),
+                            Err(err) => printlnc!(red: "{}", err),
+                        }
+                    },
+                    Ok(Command::SetInterpreter{ arch_length, arch_width }) => {
+                        match dbg.set_interpreter(arch_length, arch_width) {
+                            Ok(_) => {
+                                printlnc!(yellow: "Interpreter created.");
+                                if let Ok(ref interpreter) = dbg.interpreter() {
+                                    display_interpreter_properties(interpreter);
+                                }
+                            },
+                            Err(err) => printlnc!(red: "{}", err),
+                        }
+                    }
+                    Ok(Command::Infos) => {
+                        match dbg.debug_infos() {
+                            Ok(debug) => display_infos(&debug, statement),
+                            Err(err) => printlnc!(red: "{}", err),
+                        }
+                    },
                     Ok(Command::Copy(ref filename, ignore_nl)) => {
                         match create_program_from_file(&filename, ignore_nl) {
                             Err(err) => printlnc!(red: "{}", err),
                             Ok(program) => {
                                 match dbg.copy_program_and_reset(&program) {
-                                    Err(err) => printlnc!(red: "{}", err),
+                                    Err(_) => { // FIXME if another error than no_interpreter ?!?!
+                                        let arch_length = program.memory().len();
+                                        match dbg.set_interpreter(arch_length, DEFAULT_ARCH_WIDTH) {
+                                            Ok(_) => {
+                                                printlnc!(yellow: "Interpreter created.");
+                                                if let Ok(ref interpreter) = dbg.interpreter() {
+                                                    display_interpreter_properties(interpreter);
+                                                }
+                                            },
+                                            Err(err) => printlnc!(red: "{}", err),
+                                        }
+                                        dbg.copy_program_and_reset(&program).unwrap();
+                                        match dbg.debug_infos() {
+                                            Ok(debug) => display_infos(&debug, statement),
+                                            Err(err) => printlnc!(red: "{}", err),
+                                        }
+                                    },
                                     Ok(_) => {
                                         printlnc!(yellow: "Program correctly loaded.");
-                                        display_infos(&dbg.debug_infos(), statement)
+                                        match dbg.debug_infos() {
+                                            Ok(debug) => display_infos(&debug, statement),
+                                            Err(err) => printlnc!(red: "{}", err),
+                                        }
                                     },
                                 }
                             },
                         }
                     },
                     Ok(Command::Reset) => {
-                        statement = Some(dbg.reset());
-                        printlnc!(yellow: "Reset.");
-                        display_infos(&dbg.debug_infos(), statement)
+                        match dbg.reset() {
+                            Ok(stat) => {
+                                printlnc!(yellow: "Reset.");
+                                statement = Some(stat);
+                                match dbg.debug_infos() {
+                                    Ok(debug) => display_infos(&debug, statement),
+                                    Err(err) => printlnc!(red: "{}", err),
+                                }
+                            },
+                            Err(err) => printlnc!(red: "{}", err),
+                        }
                     },
                     Ok(Command::Step(to_execute)) => {
-                        let (executed, debug, stat) = dbg.steps(to_execute, &mut input, &mut output);
-                        statement = stat;
-                        match executed == to_execute {
-                            true => printlnc!(yellow: "{} steps executed.", executed),
-                            false => printlnc!(yellow: "{} steps executed on {}.", executed, to_execute),
+                        match dbg.steps(to_execute, &mut input, &mut output) {
+                            Ok((executed, debug, stat)) => {
+                                statement = stat;
+                                match executed == to_execute {
+                                    true => printlnc!(yellow: "{} steps executed.", executed),
+                                    false => printlnc!(yellow: "{}/{} steps executed.", executed, to_execute),
+                                }
+                                display_infos(&debug, statement)
+                            },
+                            Err(err) => printlnc!(red: "{}", err),
                         }
-                        display_infos(&debug, statement)
                     },
                     Ok(Command::Exit) => break,
                     Ok(Command::Repeat) => unreachable!(),

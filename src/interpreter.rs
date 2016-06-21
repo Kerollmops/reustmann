@@ -38,8 +38,8 @@ impl Interpreter {
     /// `arch_length` need to be in the range `[1..2^32)`
     /// and `arch_width` in `[6..32)`.
     pub fn new(arch_length: usize, arch_width: usize) -> Result<Interpreter, &'static str> {
-        if arch_length == 0 || arch_length > u32::MAX as usize { // FIXME ugly and wrong !
-            return Err("Arch length need to be in the range [1..2^64)");
+        if arch_length == 0 || arch_length > u32::MAX as usize {
+            return Err("Arch length need to be in the range [1..2^32)");
         }
         if arch_width < 6 || arch_width > 32 {
             return Err("Arch width need to be in the range [6..32)");
@@ -59,20 +59,26 @@ impl Interpreter {
 
     /// Copy your program in the memory of the machine, a reset is done after
     /// program was loaded.
-    pub fn copy_program(&mut self, program: &Program) -> Result<(), &'static str> {
+    pub fn copy_program(&mut self, program: &Program) {
         let mnemos = program.memory();
-        if mnemos.len() > self.memory.len() {
-            return Err("Program len is bigger than memory len");
-        }
         for i in 0..mnemos.len() {
             let mnemo = mnemos[i] as char;
-            self.memory[i] = match is_valid_mnemonic(mnemo) {
-                true => Into::<Instruction>::into(mnemo).into(),
-                false => mnemo as u8,
-            };
+            self.memory[i] = if is_valid_mnemonic(mnemo) {
+                Into::<Instruction>::into(mnemo).into()
+            }
+            else { mnemo as u8 };
         }
         self.reset();
-        Ok(())
+    }
+
+    /// return the interpreter arch length
+    pub fn arch_length(&self) -> usize {
+        self.memory.len()
+    }
+
+    /// return the interpreter arch width
+    pub fn arch_width(&self) -> usize {
+        self.arch_width as usize
     }
 
     /// Reset `pc`, `sp` and `nz` to `0`, `0` and `false` respectively.

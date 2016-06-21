@@ -32,14 +32,10 @@ fn create_program_from_file(filename: &String, ignore_nl: bool) -> Result<Progra
 
 // FIXME move this elsewhere
 fn display_statement(statement: Option<Statement>) {
-    print!("Last instruction was ");
-    match statement {
-        Some(statement) => {
-            let Statement(op_code, is_success) = statement;
-            let name: LongMnemonic = Into::<Instruction>::into(op_code).into();
-            println!("'{}' and return '{}'.", name, is_success)
-        },
-        None => println!("not in this dimension."),
+    if let Some(statement) = statement {
+        let Statement(op_code, is_success) = statement;
+        let name: LongMnemonic = Into::<Instruction>::into(op_code).into();
+        println!("Last instruction was '{}' and return '{}'.", name, is_success);
     }
 }
 
@@ -119,12 +115,10 @@ fn main() {
         Ok(dbg) => dbg,
     };
 
-    // TODO make it clearer/beautiful
-    printlnc!(yellow: "Interpreter informations:");
-    printlnc!(yellow: "Arch width:  {}", arch_width);
-    printlnc!(yellow: "Arch length: {}", arch_length);
-
-    // Interpreter as an arch width of 8 and an arch length of 6.
+    println!("Interpreter as an arch width of {} and an arch length of {}.",
+        format!(colorify!(yellow: "{}"), arch_width),
+        format!(colorify!(yellow: "{}"), arch_length)
+    );
 
     let mut input = empty();
     // let mut output = sink();

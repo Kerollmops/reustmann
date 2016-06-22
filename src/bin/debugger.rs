@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::default::Default;
 use std::io::{Read, Write};
 use std::fs::File;
@@ -23,7 +24,15 @@ fn create_program_from_file(filename: &String, ignore_nl: bool) -> Result<Progra
     Ok(program)
 }
 
-// (`interpreter [arch_length] [arch_width]` to create one)
+fn display_debugger_error(dbg_err: &DebuggerError) {
+    match *dbg_err {
+        DebuggerError::NoInterpreter => {
+            printlnc!(red: "{}", dbg_err.description());
+            printlnc!(yellow: "{}", "`interpreter [arch_length] [arch_width]` to create one")
+        },
+        DebuggerError::InterpreterCreation(_) => printlnc!(red: "{}", dbg_err.description()),
+    }
+}
 
 pub struct Debugger {
     interpreter: Option<Interpreter>,
@@ -57,13 +66,13 @@ impl Debugger {
             Command::UnsetInterpreter => {
                 match self.unset_interpreter() {
                     Ok(_) => printlnc!(yellow: "Interpreter correctly unset."),
-                    Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
+                    Err(err) => display_debugger_error(&err),
                 }
             }
             Command::InfosInterpreter => {
                 match self.interpreter() {
                     Ok(interpreter) => display::display_interpreter_properties(interpreter),
-                    Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
+                    Err(err) => display_debugger_error(&err),
                 }
             },
             Command::SetInterpreter{ arch_length, arch_width } => {
@@ -74,7 +83,7 @@ impl Debugger {
                             display::display_interpreter_properties(interpreter);
                         }
                     },
-                    Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
+                    Err(err) => display_debugger_error(&err),
                 }
             }
             Command::Infos => {
@@ -82,8 +91,8 @@ impl Debugger {
                     println!("Program in execution: '{}'.", filename);
                 }
                 match self.debug_infos() {
-                    Ok(debug) => display::display_infos(&debug, self.number_of_cycles, self.statement, output, self.pc_lines, self.sp_lines),
-                    Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
+                    Ok(debug) => self.display_infos(&debug, output),
+                    Err(err) => display_debugger_error(&err),
                 }
             },
             Command::Copy(ref filename, ignore_nl) => {
@@ -101,19 +110,19 @@ impl Debugger {
                                             display::display_interpreter_properties(interpreter);
                                         }
                                     },
-                                    Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
+                                    Err(err) => display_debugger_error(&err),
                                 }
                                 self.copy_program_and_reset(&program).unwrap();
                                 match self.debug_infos() {
-                                    Ok(debug) => display::display_infos(&debug, self.number_of_cycles, self.statement, output, self.pc_lines, self.sp_lines),
-                                    Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
+                                    Ok(debug) => self.display_infos(&debug, output),
+                                    Err(err) => display_debugger_error(&err),
                                 }
                             },
                             Ok(_) => {
                                 printlnc!(yellow: "Program correctly loaded.");
                                 match self.debug_infos() {
-                                    Ok(debug) => display::display_infos(&debug, self.number_of_cycles, self.statement, output, self.pc_lines, self.sp_lines),
-                                    Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
+                                    Ok(debug) => self.display_infos(&debug, output),
+                                    Err(err) => display_debugger_error(&err),
                                 }
                             },
                         }
@@ -126,11 +135,11 @@ impl Debugger {
                         printlnc!(yellow: "Reset.");
                         self.statement = Some(stat);
                         match self.debug_infos() {
-                            Ok(debug) => display::display_infos(&debug, self.number_of_cycles, self.statement, output, self.pc_lines, self.sp_lines),
-                            Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
+                            Ok(debug) => self.display_infos(&debug, output),
+                            Err(err) => display_debugger_error(&err),
                         }
                     },
-                    Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
+                    Err(err) => display_debugger_error(&err),
                 }
             },
             Command::Step(to_execute) => {
@@ -141,9 +150,9 @@ impl Debugger {
                             true => printlnc!(yellow: "{} steps executed.", executed),
                             false => printlnc!(yellow: "{}/{} steps executed.", executed, to_execute),
                         }
-                        display::display_infos(&debug, self.number_of_cycles, self.statement, output, self.pc_lines, self.sp_lines)
+                        self.display_infos(&debug, output)
                     },
-                    Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
+                    Err(err) => display_debugger_error(&err),
                 }
             },
             Command::Exit | Command::Repeat => unreachable!(),
@@ -169,7 +178,6 @@ impl Debugger {
         }
     }
 
-    // FIXME delete me
     fn interpreter(&self) -> Result<&Interpreter, DebuggerError> {
         match self.interpreter {
             Some(ref interpreter) => Ok(interpreter),
@@ -215,7 +223,15 @@ impl Debugger {
         else { Err(DebuggerError::NoInterpreter) }
     }
 
-    // FIXME delete me
+    fn display_infos<D: ?Sized + Debug>(&self, debug_infos: &DebugInfos, output: &D) {
+        display::display_infos(debug_infos,
+                               self.number_of_cycles,
+                               self.statement,
+                               output,
+                               self.pc_lines,
+                               self.sp_lines)
+    }
+
     fn debug_infos(&self) -> Result<DebugInfos, DebuggerError> {
         if let Some(ref interpreter) = self.interpreter {
             Ok(interpreter.debug_infos())

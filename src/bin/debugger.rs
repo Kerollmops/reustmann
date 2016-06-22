@@ -45,7 +45,7 @@ impl Debugger {
             interpreter: None,
             program_name: None,
             statement: None,
-            pc_lines: 10,
+            pc_lines: 10, // FIXME pc_lines need to be always >= sp_lines
             sp_lines: 5
         }
     }

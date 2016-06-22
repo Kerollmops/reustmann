@@ -1,16 +1,17 @@
-# Reustmann
+# Reustmann - a Von Neumann Architecture
 
 [![Build Status](https://travis-ci.org/Kerosene2000/Reustmann.svg?branch=master)](https://travis-ci.org/Kerosene2000/Reustmann)
 
 Reustmann is a Von Neumann architecture in Rust.
 All rights goes to [the dave miller Iota machine](http://www.millermattson.com/dave/?p=174).
-I just recreat it in Rust.
 
-[Documentation](http://Kerosene2000.github.io/reustmann/reustmann/)
+I just recreate it in **Rust**.
+
+The Reustmann [Documentation](http://Kerosene2000.github.io/reustmann-doc/reustmann/)
 
 ## How to
 
-the `hello_world.rm` program
+The `hello_world.rm` program
 ```text
 Gp..OOOOOOOOOOOOHTFello World!
 ```
@@ -70,5 +71,5 @@ println!("{:?}", interpreter.debug_infos());
 * [ ] make interpreter unit tests for each instruction
 * [ ] add launch options to executable (`--input`, `--output`...)
 * [ ] change interpreter command names in the debugger, make them more clear
-* [ ] `format!` correctly `pc_side` and `sp_side`
+* [ ] `format!` correctly `pc_side` and `sp_side` on the debugger
 * [ ] add rustyline autocompletion for commands, command options...

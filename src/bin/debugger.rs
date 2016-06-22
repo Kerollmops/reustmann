@@ -1,8 +1,5 @@
 use std::default::Default;
-use std::fmt;
-use std::fmt::Debug;
-use std::io;
-use std::io::{Read, Write, Sink, empty, sink};
+use std::io::{Read, Write};
 use std::fs::File;
 use std::error::Error;
 use reustmann::{Interpreter, DebugInfos, Program, Statement};
@@ -10,6 +7,7 @@ use reustmann::instruction::op_codes;
 use debugger_error::DebuggerError;
 use command::Command;
 use display;
+use sink_debug::DebugWrite;
 
 const DEFAULT_ARCH_WIDTH: usize = 8;
 
@@ -25,56 +23,31 @@ fn create_program_from_file(filename: &String, ignore_nl: bool) -> Result<Progra
     Ok(program)
 }
 
-struct SinkDebug(Sink);
+// (`interpreter [arch_length] [arch_width]` to create one)
 
-fn sink_debug() -> SinkDebug {
-    SinkDebug(sink())
-}
-
-impl Write for SinkDebug {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.0.write(buf)
-    }
-    fn flush(&mut self) -> io::Result<()> {
-        self.0.flush()
-    }
-}
-
-impl Debug for SinkDebug {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.pad("Empty")
-    }
-}
-
-pub struct Debugger<'a, O: 'a + Debug + Write> {
+pub struct Debugger {
     interpreter: Option<Interpreter>,
     program_name: Option<String>,
-    statement: Option<Statement>,
-    input: &'a mut Read,
-    output: &'a mut O,
+    statement: Option<Statement>
 }
 
-impl<'a, O: 'a + Debug + Write> Default for Debugger<'a, O> {
-    fn default() -> Debugger<'a, O> {
+impl Default for Debugger {
+    fn default() -> Self {
         Debugger::new()
     }
 }
 
-// (`interpreter [arch_length] [arch_width]` to create one)
-
-impl<'a, O: 'a + Debug + Write> Debugger<'a, O> {
-    pub fn new() -> Debugger<'a, O> {
+impl Debugger {
+    pub fn new() -> Debugger {
         Debugger {
             interpreter: None,
             program_name: None,
-            statement: None,
-            input: &mut empty(),
-            output: &mut sink_debug(),
+            statement: None
         }
     }
 
-    pub fn execute(&mut self, command: Command) /*-> Result<x, y>*/ {
-        match command {
+    pub fn execute<R: ?Sized + Read, W: ?Sized + DebugWrite>(&mut self, command: &Command, input: &mut R, output: &mut W) /*-> Result<x, y>*/ {
+        match *command {
             Command::UnsetInterpreter => {
                 match self.unset_interpreter() {
                     Ok(_) => printlnc!(yellow: "Interpreter correctly unset."),
@@ -103,7 +76,7 @@ impl<'a, O: 'a + Debug + Write> Debugger<'a, O> {
                     println!("Program in execution: '{}'.", filename);
                 }
                 match self.debug_infos() {
-                    Ok(debug) => display::display_infos(&debug, self.statement, self.output),
+                    Ok(debug) => display::display_infos(&debug, self.statement, output),
                     Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
                 }
             },
@@ -126,14 +99,14 @@ impl<'a, O: 'a + Debug + Write> Debugger<'a, O> {
                                 }
                                 self.copy_program_and_reset(&program).unwrap();
                                 match self.debug_infos() {
-                                    Ok(debug) => display::display_infos(&debug, self.statement, self.output),
+                                    Ok(debug) => display::display_infos(&debug, self.statement, output),
                                     Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
                                 }
                             },
                             Ok(_) => {
                                 printlnc!(yellow: "Program correctly loaded.");
                                 match self.debug_infos() {
-                                    Ok(debug) => display::display_infos(&debug, self.statement, self.output),
+                                    Ok(debug) => display::display_infos(&debug, self.statement, output),
                                     Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
                                 }
                             },
@@ -147,7 +120,7 @@ impl<'a, O: 'a + Debug + Write> Debugger<'a, O> {
                         printlnc!(yellow: "Reset.");
                         self.statement = Some(stat);
                         match self.debug_infos() {
-                            Ok(debug) => display::display_infos(&debug, self.statement, self.output),
+                            Ok(debug) => display::display_infos(&debug, self.statement, output),
                             Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
                         }
                     },
@@ -155,14 +128,14 @@ impl<'a, O: 'a + Debug + Write> Debugger<'a, O> {
                 }
             },
             Command::Step(to_execute) => {
-                match self.steps(to_execute, &mut self.input, &mut self.output) {
+                match self.steps(to_execute, input, output) {
                     Ok((executed, debug, stat)) => {
                         self.statement = stat;
                         match executed == to_execute {
                             true => printlnc!(yellow: "{} steps executed.", executed),
                             false => printlnc!(yellow: "{}/{} steps executed.", executed, to_execute),
                         }
-                        display::display_infos(&debug, self.statement, self.output)
+                        display::display_infos(&debug, self.statement, output)
                     },
                     Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
                 }
@@ -214,7 +187,7 @@ impl<'a, O: 'a + Debug + Write> Debugger<'a, O> {
         else { Err(DebuggerError::NoInterpreter) }
     }
 
-    fn steps<R: Read, W: Write>(&mut self, steps: usize, input: &mut R, output: &mut W)
+    fn steps<R: ?Sized + Read, W: ?Sized + Write>(&mut self, steps: usize, input: &mut R, output: &mut W)
             -> Result<(usize, DebugInfos, Option<Statement>), DebuggerError> {
 
         if let Some(ref mut interpreter) = self.interpreter {

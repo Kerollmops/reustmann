@@ -6,6 +6,7 @@ extern crate reustmann;
 mod command;
 mod debugger;
 mod debugger_error;
+mod sink_debug;
 mod display;
 
 use rustyline::completion::FilenameCompleter;
@@ -13,8 +14,8 @@ use rustyline::error::ReadlineError;
 use rustyline::Editor;
 use command::Command;
 use debugger::Debugger;
-use debugger_error::DebuggerError;
-use reustmann::Program;
+use sink_debug::sink_debug;
+use std::io::empty;
 
 fn main() {
     let file_comp = FilenameCompleter::new();
@@ -33,10 +34,11 @@ fn main() {
     //     display::display_interpreter_properties(interpreter);
     // }
 
-    // let mut input = empty();
-    let mut input = "\nHello".as_bytes();
-    // let mut output = sink();
-    let mut output = Vec::new();
+    let mut input = empty();
+    // let mut input = "\nHello".as_bytes();
+
+    // let mut output = sink_debug();
+    let mut output = Vec::<u8>::new();
 
     loop {
         let prompt = format!(colorify!(dark_grey: "({}) "), "rmdb");
@@ -55,7 +57,7 @@ fn main() {
                 match command {
                     Ok(Command::Exit) => break,
                     Ok(Command::Repeat) => unreachable!(),
-                    Ok(command) => dbg.execute(command),
+                    Ok(ref command) => dbg.execute(&command, &mut input, &mut output), // FIXME retrieve error
                     Err(ref e) => printlnc!(red: "{}", e),
                 }
                 last_command = command.ok();

@@ -3,7 +3,7 @@ use std::cmp::min;
 use instruction::Instruction;
 use instruction::op_codes::*;
 use instruction::is_valid_mnemonic;
-use memory::{Mnemonics, OpCodes};
+use memory::OpCodes;
 use program::Program;
 use std::u32;
 
@@ -126,7 +126,7 @@ impl Interpreter {
     }
 
     // FIXME use Bytes iterator ?
-    fn execute<R: Read, W: Write>(&mut self, op: OpCode, input: &mut R, output: &mut W) -> Statement {
+    fn execute<R: ?Sized + Read, W: ?Sized + Write>(&mut self, op: OpCode, input: &mut R, output: &mut W) -> Statement {
         match op {
             RESET => self.reset(),
             HALT => Statement(op, true),
@@ -481,7 +481,7 @@ impl Interpreter {
     /// Use [Empty](https://doc.rust-lang.org/std/io/struct.Empty.html) and/or
     /// [Sink](https://doc.rust-lang.org/std/io/struct.Sink.html)
     /// if you don't want to give input and/or output.
-    pub fn step<R: Read, W: Write>(&mut self, input: &mut R, output: &mut W) -> Statement {
+    pub fn step<R: ?Sized + Read, W: ?Sized + Write>(&mut self, input: &mut R, output: &mut W) -> Statement {
         let instr = self.memory[self.pc];
         self.number_of_cycles += 1;
         self.execute(instr, input, output)

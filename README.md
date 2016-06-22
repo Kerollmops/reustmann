@@ -18,6 +18,8 @@ Gp..OOOOOOOOOOOOHTFello World!
 
 First create a program, from a file for example
 ```rust
+extern crate reustmann;
+
 use std::fs::File;
 use reustmann::Program;
 

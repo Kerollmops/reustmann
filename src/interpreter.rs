@@ -15,7 +15,7 @@ pub type ExecutionSucceeded = bool;
 pub struct Statement(pub OpCode, pub ExecutionSucceeded);
 
 /// A Debug structure to help debugging :)
-// #[derive(Debug)] // TODO !!!
+#[derive(Debug)]
 pub struct DebugInfos {
     pub memory: OpCodes,
     pub pc: usize,

@@ -3,15 +3,15 @@ use instruction::op_codes::OpCode;
 use std::ops::Deref;
 
 /// A struct that get all instruction in bytes (used in the Interpreter).
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct OpCodes(pub Vec<OpCode>);
 
 /// A struct containing all mnemonic names of each instruction.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Mnemonics(pub Vec<Mnemonic>);
 
 /// A struct containing all long names of each instruction.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct LongMnemonics(pub Vec<LongMnemonic>);
 
 impl Deref for OpCodes {

@@ -43,7 +43,33 @@ pub fn format_stack_pointer(mem_addr: usize, value: u8) -> String {
     }
 }
 
-pub fn display_infos<D: ?Sized + Debug>(debug_infos: &DebugInfos, statement: Option<Statement>, output: &D) {
+fn display_sides(instr: Option<(usize, (usize, &u8))>,
+                 stack: Option<(usize, &u8)>,
+                 indicators: bool) {
+
+    let pc_side = if let Some((idx, (pc_addr, op_code))) = instr {
+        let pc_side = format_program_counter(pc_addr, idx, *op_code);
+        if indicators == true { format!("{} {}", colorify!(red: "pc"), pc_side) }
+        else { format!("   {}", pc_side) }
+    } else {
+        format!("")
+    };
+    let sp_side = if let Some((sp_addr, value)) = stack {
+        let sp_side = format_stack_pointer(sp_addr, *value);
+        if indicators == true { format!("{} {}", colorify!(red: "sp"), sp_side) }
+        else { format!("   {}", sp_side) }
+    } else {
+        format!("")
+    };
+    println!("{}    {}", pc_side, sp_side);
+}
+
+// FIXME ugly really !!!
+pub fn display_infos<D: ?Sized + Debug>(debug_infos: &DebugInfos,
+                                        statement: Option<Statement>,
+                                        output: &D,
+                                        pc_lines: usize,
+                                        sp_lines: usize) {
 
     // if let Some(output) = output {
         // let output = String::from_utf8_lossy(&output);
@@ -54,27 +80,15 @@ pub fn display_infos<D: ?Sized + Debug>(debug_infos: &DebugInfos, statement: Opt
     println!("cycles: {}, pc: {}, sp: {}, nz: {}", number_of_cycles, pc, sp, nz);
     display_statement(statement);
 
-    // FIXME don't zip, display different number of stack/instructions
-    let lines = 10;
+    let mut instrs = (*memory).iter().enumerate().cycle().skip(pc).take(pc_lines).enumerate();
+    let mut stack = (*memory).iter().enumerate().cycle().skip(sp).take(sp_lines);
 
-    let instrs = (*memory).iter().enumerate().cycle().skip(pc).take(lines).enumerate();
-    let stack = (*memory).iter().enumerate().cycle().skip(sp).take(lines);
-    let mut pc_sp = instrs.zip(stack);
-
-    if let Some(((idx, (pc_addr, op_code)), (sp_addr, value))) = pc_sp.next() {
-        let pc_side = format_program_counter(pc_addr, idx, *op_code);
-        let pc_side = format!("{} {}", colorify!(red: "pc"), pc_side);
-        let sp_side = format_stack_pointer(sp_addr, *value);
-        let sp_side = format!("{} {}", colorify!(red: "sp"), sp_side);
-        println!("{}    {}", pc_side, sp_side);
-    }
-
-    for ((idx, (pc_addr, op_code)), (sp_addr, value)) in pc_sp {
-        let pc_side = format_program_counter(pc_addr, idx, *op_code);
-        let pc_side = format!("   {}", pc_side);
-        let sp_side = format_stack_pointer(sp_addr, *value);
-        let sp_side = format!("   {}", sp_side);
-        println!("{}    {}", pc_side, sp_side);
+    display_sides(instrs.next(), stack.next(), true);
+    loop {
+        match (instrs.next(), stack.next()) {
+            (None, None) => break,
+            (instr, stack) => display_sides(instr, stack, false),
+        }
     }
 }
 

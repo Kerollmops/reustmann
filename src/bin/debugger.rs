@@ -28,7 +28,9 @@ fn create_program_from_file(filename: &String, ignore_nl: bool) -> Result<Progra
 pub struct Debugger {
     interpreter: Option<Interpreter>,
     program_name: Option<String>,
-    statement: Option<Statement>
+    statement: Option<Statement>,
+    pc_lines: usize,
+    sp_lines: usize
 }
 
 impl Default for Debugger {
@@ -42,7 +44,9 @@ impl Debugger {
         Debugger {
             interpreter: None,
             program_name: None,
-            statement: None
+            statement: None,
+            pc_lines: 10,
+            sp_lines: 5
         }
     }
 
@@ -76,7 +80,7 @@ impl Debugger {
                     println!("Program in execution: '{}'.", filename);
                 }
                 match self.debug_infos() {
-                    Ok(debug) => display::display_infos(&debug, self.statement, output),
+                    Ok(debug) => display::display_infos(&debug, self.statement, output, self.pc_lines, self.sp_lines),
                     Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
                 }
             },
@@ -99,14 +103,14 @@ impl Debugger {
                                 }
                                 self.copy_program_and_reset(&program).unwrap();
                                 match self.debug_infos() {
-                                    Ok(debug) => display::display_infos(&debug, self.statement, output),
+                                    Ok(debug) => display::display_infos(&debug, self.statement, output, self.pc_lines, self.sp_lines),
                                     Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
                                 }
                             },
                             Ok(_) => {
                                 printlnc!(yellow: "Program correctly loaded.");
                                 match self.debug_infos() {
-                                    Ok(debug) => display::display_infos(&debug, self.statement, output),
+                                    Ok(debug) => display::display_infos(&debug, self.statement, output, self.pc_lines, self.sp_lines),
                                     Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
                                 }
                             },
@@ -120,7 +124,7 @@ impl Debugger {
                         printlnc!(yellow: "Reset.");
                         self.statement = Some(stat);
                         match self.debug_infos() {
-                            Ok(debug) => display::display_infos(&debug, self.statement, output),
+                            Ok(debug) => display::display_infos(&debug, self.statement, output, self.pc_lines, self.sp_lines),
                             Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
                         }
                     },
@@ -135,7 +139,7 @@ impl Debugger {
                             true => printlnc!(yellow: "{} steps executed.", executed),
                             false => printlnc!(yellow: "{}/{} steps executed.", executed, to_execute),
                         }
-                        display::display_infos(&debug, self.statement, output)
+                        display::display_infos(&debug, self.statement, output, self.pc_lines, self.sp_lines)
                     },
                     Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
                 }

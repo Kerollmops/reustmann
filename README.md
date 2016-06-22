@@ -11,7 +11,7 @@ I just recreat it in Rust.
 ## How to
 
 `hello_world.rm`
-```rust
+```text
 Gp..OOOOOOOOOOOOHTFello World!
 ```
 

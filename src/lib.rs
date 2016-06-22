@@ -161,7 +161,7 @@
 //! A copy of the license is included in the accompanying
 //! file named COPYING and online at http://www.gnu.org/licenses/fdl.txt.
 
-// FIXME rename me Reustmann ?!?!
+// FIXME rename me Iota Machine ?!?!
 // but this already exist !!!
 mod program;
 mod interpreter;
@@ -169,16 +169,9 @@ mod interpreter;
 pub mod instruction;
 pub mod memory;
 
-/// All instructions used in the Reustmann architecture.
+// /// All instructions used in the Reustmann architecture.
 // pub use instruction::op_codes::OpCode;
 // pub use instruction::{Mnemonic, LongMnemonic};
 
 pub use program::Program;
 pub use interpreter::{Interpreter, Statement, DebugInfos};
-
-// #[cfg(test)]
-// mod tests {
-//     #[test]
-//     fn it_works() {
-//     }
-// }

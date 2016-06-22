@@ -17,7 +17,6 @@ pub struct Statement(pub OpCode, pub ExecutionSucceeded);
 /// A Debug structure to help debugging :)
 // #[derive(Debug)] // TODO !!!
 pub struct DebugInfos {
-    pub number_of_cycles: usize,
     pub memory: OpCodes,
     pub pc: usize,
     pub sp: usize,
@@ -27,7 +26,6 @@ pub struct DebugInfos {
 /// The main interpreter, execute instructions, read from input,
 /// write to output
 pub struct Interpreter {
-    number_of_cycles: usize,
     arch_width: u8,      // [6..32)
     memory: Vec<OpCode>, // [1..2^32)
     pc: usize,
@@ -52,7 +50,6 @@ impl Interpreter {
             memory.push(NOP);
         }
         Ok(Interpreter {
-            number_of_cycles: 0,
             arch_width: arch_width as u8,
             memory: memory,
             pc: 0,
@@ -483,14 +480,12 @@ impl Interpreter {
     /// if you don't want to give input and/or output.
     pub fn step<R: ?Sized + Read, W: ?Sized + Write>(&mut self, input: &mut R, output: &mut W) -> Statement {
         let instr = self.memory[self.pc];
-        self.number_of_cycles += 1;
         self.execute(instr, input, output)
     }
 
     /// Get a debug struct that can help for debugging programs
     pub fn debug_infos(&self) -> DebugInfos {
        DebugInfos {
-            number_of_cycles: self.number_of_cycles,
             memory: OpCodes(self.memory.clone()),
             pc: self.pc,
             sp: self.sp,

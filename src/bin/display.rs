@@ -66,6 +66,7 @@ fn display_sides(instr: Option<(usize, (usize, &u8))>,
 
 // FIXME ugly really !!!
 pub fn display_infos<D: ?Sized + Debug>(debug_infos: &DebugInfos,
+                                        number_of_cycles: usize,
                                         statement: Option<Statement>,
                                         output: &D,
                                         pc_lines: usize,
@@ -76,7 +77,7 @@ pub fn display_infos<D: ?Sized + Debug>(debug_infos: &DebugInfos,
         println!("Output: {:?}", output);
     // }
 
-    let &DebugInfos{ number_of_cycles, ref memory, pc, sp, nz } = debug_infos;
+    let &DebugInfos{ ref memory, pc, sp, nz } = debug_infos;
     println!("cycles: {}, pc: {}, sp: {}, nz: {}", number_of_cycles, pc, sp, nz);
     display_statement(statement);
 

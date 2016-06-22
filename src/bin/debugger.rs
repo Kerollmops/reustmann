@@ -27,6 +27,7 @@ fn create_program_from_file(filename: &String, ignore_nl: bool) -> Result<Progra
 
 pub struct Debugger {
     interpreter: Option<Interpreter>,
+    number_of_cycles: usize,
     program_name: Option<String>,
     statement: Option<Statement>,
     pc_lines: usize,
@@ -43,6 +44,7 @@ impl Debugger {
     pub fn new() -> Debugger {
         Debugger {
             interpreter: None,
+            number_of_cycles: 0,
             program_name: None,
             statement: None,
             pc_lines: 10, // FIXME pc_lines need to be always >= sp_lines
@@ -80,7 +82,7 @@ impl Debugger {
                     println!("Program in execution: '{}'.", filename);
                 }
                 match self.debug_infos() {
-                    Ok(debug) => display::display_infos(&debug, self.statement, output, self.pc_lines, self.sp_lines),
+                    Ok(debug) => display::display_infos(&debug, self.number_of_cycles, self.statement, output, self.pc_lines, self.sp_lines),
                     Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
                 }
             },
@@ -103,14 +105,14 @@ impl Debugger {
                                 }
                                 self.copy_program_and_reset(&program).unwrap();
                                 match self.debug_infos() {
-                                    Ok(debug) => display::display_infos(&debug, self.statement, output, self.pc_lines, self.sp_lines),
+                                    Ok(debug) => display::display_infos(&debug, self.number_of_cycles, self.statement, output, self.pc_lines, self.sp_lines),
                                     Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
                                 }
                             },
                             Ok(_) => {
                                 printlnc!(yellow: "Program correctly loaded.");
                                 match self.debug_infos() {
-                                    Ok(debug) => display::display_infos(&debug, self.statement, output, self.pc_lines, self.sp_lines),
+                                    Ok(debug) => display::display_infos(&debug, self.number_of_cycles, self.statement, output, self.pc_lines, self.sp_lines),
                                     Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
                                 }
                             },
@@ -124,7 +126,7 @@ impl Debugger {
                         printlnc!(yellow: "Reset.");
                         self.statement = Some(stat);
                         match self.debug_infos() {
-                            Ok(debug) => display::display_infos(&debug, self.statement, output, self.pc_lines, self.sp_lines),
+                            Ok(debug) => display::display_infos(&debug, self.number_of_cycles, self.statement, output, self.pc_lines, self.sp_lines),
                             Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
                         }
                     },
@@ -139,7 +141,7 @@ impl Debugger {
                             true => printlnc!(yellow: "{} steps executed.", executed),
                             false => printlnc!(yellow: "{}/{} steps executed.", executed, to_execute),
                         }
-                        display::display_infos(&debug, self.statement, output, self.pc_lines, self.sp_lines)
+                        display::display_infos(&debug, self.number_of_cycles, self.statement, output, self.pc_lines, self.sp_lines)
                     },
                     Err(err) => printlnc!(red: "{:?}", err), // FIXME display correct error
                 }
@@ -192,7 +194,7 @@ impl Debugger {
     }
 
     fn steps<R: ?Sized + Read, W: ?Sized + Write>(&mut self, steps: usize, input: &mut R, output: &mut W)
-            -> Result<(usize, DebugInfos, Option<Statement>), DebuggerError> {
+        -> Result<(usize, DebugInfos, Option<Statement>), DebuggerError> {
 
         if let Some(ref mut interpreter) = self.interpreter {
             let mut statement = None;
@@ -206,6 +208,7 @@ impl Debugger {
                     }
                 }
                 executed = i + 1;
+                self.number_of_cycles += executed;
             }
             Ok((executed, interpreter.debug_infos(), statement))
         }

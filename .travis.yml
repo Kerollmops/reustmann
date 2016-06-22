@@ -1,0 +1,2 @@
+language: rust
+after_success: cat scripts/travis-doc-upload.sh | sh

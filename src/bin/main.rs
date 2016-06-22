@@ -34,8 +34,8 @@ fn main() {
     //     display::display_interpreter_properties(interpreter);
     // }
 
-    let mut input = empty();
-    // let mut input = "\nHello".as_bytes();
+    // let mut input = empty();
+    let mut input = "\nHello".as_bytes();
 
     // let mut output = sink_debug();
     let mut output = Vec::<u8>::new();

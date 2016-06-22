@@ -146,9 +146,10 @@ impl Debugger {
                 match self.steps(to_execute, input, output) {
                     Ok((executed, debug, stat)) => {
                         self.statement = stat;
-                        match executed == to_execute {
-                            true => printlnc!(yellow: "{} steps executed.", executed),
-                            false => printlnc!(yellow: "{}/{} steps executed.", executed, to_execute),
+                        if executed == to_execute {
+                            printlnc!(yellow: "{} steps executed.", executed)
+                        } else {
+                            printlnc!(yellow: "{}/{} steps executed.", executed, to_execute)
                         }
                         self.display_infos(&debug, output)
                     },
@@ -216,8 +217,8 @@ impl Debugger {
                     }
                 }
                 executed = i + 1;
-                self.number_of_cycles += executed;
             }
+            self.number_of_cycles += executed;
             Ok((executed, interpreter.debug_infos(), statement))
         }
         else { Err(DebuggerError::NoInterpreter) }

@@ -1,6 +1,6 @@
 [package]
 name = "reustmann"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Kerosene2000 <renault.cle@gmail.com>"]
 keywords = ["von", "neumann", "architecture", "genetic", "algorithm"]
 description = "Reustmann is a Von Neumann architecture"

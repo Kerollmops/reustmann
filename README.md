@@ -7,7 +7,7 @@ All rights goes to [the dave miller Iota machine](http://www.millermattson.com/d
 
 I just recreate it in **Rust**.
 
-The Reustmann [Documentation](http://Kerosene2000.github.io/reustmann-doc/reustmann/)
+The Reustmann [Documentation](https://kerosene2000.github.io/reustmann-doc/reustmann/reustmann)
 
 ## How to
 

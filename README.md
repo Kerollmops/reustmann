@@ -1,4 +1,4 @@
-# Reustmann - a Von Neumann Architecture
+# Reustmann - a Von Neumann architecture
 
 [![Build Status](https://travis-ci.org/Kerosene2000/Reustmann.svg?branch=master)](https://travis-ci.org/Kerosene2000/Reustmann)
 

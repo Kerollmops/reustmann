@@ -70,7 +70,7 @@ println!("{:?}", interpreter.debug_infos());
 
 ## TODO
 
-* [ ] make interpreter unit tests for each instruction
+* [ ] make interpreter unit tests for each instruction (add `coveralls.io`)
 * [ ] add launch options to executable (`--input`, `--output`...)
 * [ ] change interpreter command names in the debugger, make them more clear
 * [ ] `format!` correctly `pc_side` and `sp_side` on the debugger

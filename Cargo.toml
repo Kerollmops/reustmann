@@ -1,12 +1,12 @@
 [package]
 name = "reustmann"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Kerosene2000 <renault.cle@gmail.com>"]
 keywords = ["von", "neumann", "architecture", "genetic", "algorithm"]
 description = "Reustmann is a Von Neumann architecture"
 documentation = "https://kerosene2000.github.io/reustmann-doc/reustmann/reustmann/"
 repository = "https://github.com/Kerosene2000/Reustmann"
-license = "MIT"
+license = "GPL-3.0"
 
 [[bin]]
 name = "reustmann"

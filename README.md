@@ -1,6 +1,6 @@
 # Reustmann - a Von Neumann architecture
 
-[![Build Status](https://travis-ci.org/Kerosene2000/Reustmann.svg?branch=master)](https://travis-ci.org/Kerosene2000/Reustmann)
+[![Build Status](https://travis-ci.org/Kerosene2000/reustmann.svg?branch=master)](https://travis-ci.org/Kerosene2000/reustmann)
 
 Reustmann is a Von Neumann architecture in Rust.
 I was inspired by [the dave miller Iota machine](http://www.millermattson.com/dave/?p=174).

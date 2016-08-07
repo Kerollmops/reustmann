@@ -68,7 +68,7 @@ println!("{:?}", interpreter.debug_infos());
 ```
 
 
-## TODO
+## To Do
 
 * [ ] make interpreter unit tests for each instruction (add `coveralls.io`)
 * [ ] add launch options to executable (`--input`, `--output`...)

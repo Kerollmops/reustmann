@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 use std::str::{self, FromStr};
-use nom::{IResult, eof, space, digit, alphanumeric, is_space};
+use nom::{IResult, space, digit, alphanumeric, is_space};
 
 #[derive(Debug, Clone)]
 pub enum Command {
@@ -20,8 +20,8 @@ pub enum Command {
 
 named!(
     command<Command>,
-    chain!(
-        c: alt_complete!(
+    terminated!(
+        alt_complete!(
             exit |
             set_interpreter |
             unset_interpreter |
@@ -31,9 +31,8 @@ named!(
             reset |
             step |
             repeat
-        ) ~
-        eof, // force eof after matching command
-        || c
+        ),
+        eof!() // force eof after matching command
     )
 );
 

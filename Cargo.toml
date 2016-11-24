@@ -14,5 +14,5 @@ doc = false
 
 [dependencies]
 colorify = "0.2"
-nom = "1.2"
+nom = "^2.0"
 rustyline = "0.2"

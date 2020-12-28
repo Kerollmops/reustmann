@@ -52,7 +52,7 @@ impl Interpreter {
         }
         Ok(Interpreter {
             arch_width: arch_width as u8,
-            memory: memory,
+            memory,
             pc: 0,
             sp: 0,
             nz: false
@@ -63,12 +63,11 @@ impl Interpreter {
     /// program was loaded.
     pub fn copy_program(&mut self, program: &Program) {
         let mnemos = program.memory();
-        for i in 0..min(mnemos.len(), mnemos.len()) {
+        for i in 0..min(mnemos.len(), self.memory.len()) {
             let mnemo = mnemos[i] as char;
             self.memory[i] = if is_valid_mnemonic(mnemo) {
                 Into::<Instruction>::into(mnemo).into()
-            }
-            else { mnemo as u8 };
+            } else { mnemo as u8 };
         }
         self.reset();
     }

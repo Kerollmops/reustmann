@@ -1,16 +1,12 @@
 [package]
 name = "reustmann"
-version = "0.1.2"
+version = "0.2.0"
 authors = ["Kerollmops <renault.cle@gmail.com>"]
 keywords = ["von", "neumann", "architecture", "genetic", "algorithm"]
 description = "Reustmann is a Von Neumann architecture"
 documentation = "https://docs.rs/reustmann"
 repository = "https://github.com/Kerollmops/Reustmann"
 license = "MIT"
-
-# [[bin]]
-# name = "reustmann"
-# doc = false
 
 [dependencies]
 colorify = "0.2"

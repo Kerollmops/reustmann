@@ -31,7 +31,7 @@
 //! Here is a simple Reustmann program that copies its input to its output as long as
 //! the data is nonzero, shown with long mnemonics with added comments:
 //!
-//! ```ignore
+//! ```text
 //! LOOP    // loop until the ENDL opcode
 //! IN      // read one char from stdin and push it on the stack
 //! BNZ     // skip the next instruction if nonzero
@@ -99,7 +99,7 @@
 //! is a string of characters of length ≤ L. When loaded into Reustmann memory,
 //! the source string S is interpreted as follows:
 //!
-//! ```ignore
+//! ```text
 //! for each character C in S:
 //!     if C is a defined short mnemonic:
 //!         store the opcode by opcode number
@@ -111,7 +111,7 @@
 //! machine of any rank, the listing will render each memory value N as a
 //! single character as follows:
 //!
-//! ```ignore
+//! ```text
 //! if N is an assigned opcode number:
 //!     show the short opcode mnemonic
 //! else if N is representable as a single character:

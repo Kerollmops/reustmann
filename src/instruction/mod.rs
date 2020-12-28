@@ -4,7 +4,7 @@
 //!
 //! ### System and stack
 //!
-//! ```ignore
+//! ```text
 //! ;       NOP     No-operation
 //! R       RESET   Reset
 //! H       HALT    Halt program execution
@@ -22,7 +22,7 @@
 //!
 //! ### Math and logic
 //!
-//! ```ignore
+//! ```text
 //! 0       PUSH0   Push a zero onto the stack
 //! +       ADD     Add the top two stacked words
 //! -       SUB     Subract the top two stacked words
@@ -40,7 +40,7 @@
 //!
 //! ### Conditionals
 //!
-//! ```ignore
+//! ```text
 //! Z       BZ      Branch on zero
 //! z       BNZ     Branch on not-zero
 //! =       BEQ     Branch on equal
@@ -51,7 +51,7 @@
 //!
 //! ### Unconditionals
 //!
-//! ```ignore
+//! ```text
 //! L       LOOP    Loop until the following ENDL
 //! ]       ENDL    End of LOOP
 //! B       BRAN    Branch to next TARGET opcode
@@ -90,7 +90,7 @@ pub enum Instruction {
     /// or by any value not assigned to another opcode. During execution,
     /// all unassigned opcode values are mapped to the NOP instruction.
     ///
-    /// ```ignore
+    /// ```text
     /// PC = PC + 1 mod L
     /// SP = no change
     /// NZ = no change
@@ -101,7 +101,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `R`
     ///
-    /// ```ignore
+    /// ```text
     /// PC = 0
     /// SP = 0
     /// NZ = false
@@ -119,7 +119,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `I`
     ///
-    /// ```ignore
+    /// ```text
     /// SP = SP - 1 mod L
     /// *SP = getchar() trunc W
     /// PC = PC + 1 mod L
@@ -135,7 +135,7 @@ pub enum Instruction {
     /// it will be truncated to a char as it is output.
     /// This is inconsequential for Reustmann machines of rank W ≤ 8.
     ///
-    /// ```ignore
+    /// ```text
     /// putchar((char)*SP)
     /// SP = SP + 1 mod L
     /// PC = PC + 1 mod L
@@ -147,7 +147,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `p`
     ///
-    /// ```ignore
+    /// ```text
     /// SP = SP + 1 mod L
     /// PC = PC + 1 mod L
     /// NZ = true if the item popped is nonzero, else false
@@ -158,7 +158,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `D`
     ///
-    /// ```ignore
+    /// ```text
     /// Temp = *SP
     /// SP = SP - 1 mod L
     /// *SP = Temp
@@ -171,7 +171,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `C`
     ///
-    /// ```ignore
+    /// ```text
     /// SP = SP - 1 mod L
     /// *SP = PC trunc W
     /// PC = PC + 1 mod L
@@ -183,7 +183,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `c`
     ///
-    /// ```ignore
+    /// ```text
     /// PC = *SP mod L
     /// SP = SP + 1 mod L
     /// NZ = no change
@@ -194,7 +194,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `Y`
     ///
-    /// ```ignore
+    /// ```text
     /// SP = *SP mod L
     /// PC = PC + 1 mod L
     /// NZ = no change
@@ -210,7 +210,7 @@ pub enum Instruction {
     /// The search does not wrap around. If no TARGET opcode is found,
     /// or if the PC is already at L - 1, the SPTGT is executed as if it were a NOP instruction.
     ///
-    /// ```ignore
+    /// ```text
     /// If a subsequent TARGET opcode is found:
     ///     SP = address of the TARGET opcode
     /// else:
@@ -224,7 +224,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `P`
     ///
-    /// ```ignore
+    /// ```text
     /// SP = SP - 1 mod L
     /// *SP = NZ
     /// PC = PC + 1 mod L
@@ -236,7 +236,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `S`
     ///
-    /// ```ignore
+    /// ```text
     /// Temp = *SP
     /// *SP = *(SP + 1 mod L)
     /// *(SP + 1 mod L) = Temp
@@ -249,7 +249,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `0`
     ///
-    /// ```ignore
+    /// ```text
     /// SP = SP - 1 mod L
     /// *SP = 0
     /// PC = PC + 1 mod L
@@ -261,7 +261,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `+`
     ///
-    /// ```ignore
+    /// ```text
     /// SP = SP - 1 mod L
     /// *SP = (*(SP + 2 mod L) + *(SP+ 1 mod L)) trunc W
     /// PC = PC + 1 mod L
@@ -273,7 +273,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `-`
     ///
-    /// ```ignore
+    /// ```text
     /// SP = SP - 1 mod L
     /// *SP = (*(SP + 2 mod L) - *(SP + 1 mod L)) trunc W
     /// PC = PC + 1 mod L
@@ -285,7 +285,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `.`
     ///
-    /// ```ignore
+    /// ```text
     /// *SP = (*SP) + 1 trunc W
     /// PC = PC + 1 mod L
     /// NZ = true if the result is nonzero, else false
@@ -296,7 +296,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `,`
     ///
-    /// ```ignore
+    /// ```text
     /// *SP = (*SP) - 1 trunc W
     /// PC = PC + 1 mod L
     /// NZ = true if the result is nonzero, else false
@@ -307,7 +307,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `*`
     ///
-    /// ```ignore
+    /// ```text
     /// SP = SP - 1 mod L
     /// *SP= (*(SP + 2 mod L) * (*(SP + 1 mod L)) trunc W PC = PC + 1 mod L
     /// NZ = true if the result is nonzero, else false
@@ -320,7 +320,7 @@ pub enum Instruction {
     ///
     /// If the divisor is zero, the quotient will be the maximum possible word value, and the remainder zero.
     ///
-    /// ```ignore
+    /// ```text
     /// Op0 = *(SP + 1 mod L)
     /// Op1 = *SP
     /// if Op1 is zero, change Op0 to the maximum value and Op1 to 1 *(SP + 1 mod L) = quotient of Op0 / Op1 trunc W
@@ -334,7 +334,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `^`
     ///
-    /// ```ignore
+    /// ```text
     /// SP = SP - 1 mod L
     /// *SP = (*(SP + 2 mod L) XOR *(SP + 2 mod L)) trunc W
     /// PC = PC + 1 mod L
@@ -346,7 +346,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `&`
     ///
-    /// ```ignore
+    /// ```text
     /// SP = SP - 1 mod L
     /// *SP = (*( SP + 2 mod L) AND *(SP + 2 mod L)) trunc W
     /// PC = PC + 1 mod L
@@ -358,7 +358,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `|`
     ///
-    /// ```ignore
+    /// ```text
     /// SP = SP - 1 mod L
     /// *SP = (*(SP + 2 mod L) OR *(SP + 2 mod L)) trunc W
     /// PC = PC + 1 mod L
@@ -370,7 +370,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `(`
     ///
-    /// ```ignore
+    /// ```text
     /// *SP = *SP << 1 trunc W
     /// PC = PC + 1 mod L
     /// NZ = true if the result is nonzero, else false
@@ -381,7 +381,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `)`
     ///
-    /// ```ignore
+    /// ```text
     /// *SP = *SP >> 1 trunc W
     /// PC = PC + 1 mod L
     /// NZ = true if the result is nonzero, else false
@@ -392,7 +392,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `~`
     ///
-    /// ```ignore
+    /// ```text
     /// *SP = NOT *SP trunc W
     /// PC = PC + 1 mod L
     /// NZ = true if the result is nonzero, else false
@@ -405,7 +405,7 @@ pub enum Instruction {
     ///
     /// Skips one opcode if NZ is false.
     ///
-    /// ```ignore
+    /// ```text
     /// if NZ is false
     ///     PC = PC + 2 mod L
     /// else
@@ -420,7 +420,7 @@ pub enum Instruction {
     ///
     /// Skips one opcode if NZ is true.
     ///
-    /// ```ignore
+    /// ```text
     /// if NZ is true
     ///     PC = PC + 2 mod L
     /// else
@@ -433,7 +433,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `=`
     ///
-    /// ```ignore
+    /// ```text
     /// if *(SP + 1 mod L) .eq. *SP
     ///     PC = PC+ 2 mod L
     /// else
@@ -446,7 +446,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `>`
     ///
-    /// ```ignore
+    /// ```text
     /// if *(SP + 1 mod L) > *SP
     ///     PC = PC + 2 mod L
     /// else
@@ -459,7 +459,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `{`
     ///
-    /// ```ignore
+    /// ```text
     /// if *(SP + 1 mod L) < *SP
     ///     PC = PC + 2 mod L
     /// else
@@ -472,7 +472,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `}`
     ///
-    /// ```ignore
+    /// ```text
     /// if *(SP + 1 mod L) >= * SP
     /// PC = PC + 2 mod L
     /// else
@@ -485,7 +485,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `L`
     ///
-    /// ```ignore
+    /// ```text
     /// PC = PC + 1 mod L
     /// SP = no change
     /// NZ = no change
@@ -502,7 +502,7 @@ pub enum Instruction {
     /// If no LOOP opcode is found, or if the PC is already at location 0,
     /// the ENDL is executed as if it were a NOP instruction.
     ///
-    /// ```ignore
+    /// ```text
     /// if there is a preceding LOOP instruction:
     ///     PC = location of LOOP opcode + 1
     /// else:
@@ -521,7 +521,7 @@ pub enum Instruction {
     /// the BRAN is executed as if it were a NOP instruction.
     /// If the TARGET is found at memory location L - 1, execution will resume at location 0.
     ///
-    /// ```ignore
+    /// ```text
     /// if there is a subsequent TARGET instruction:
     ///     PC = (location of TARGET opcode + 1) mod L
     /// else:
@@ -539,7 +539,7 @@ pub enum Instruction {
     /// If no TARGET opcode is found or if the PC is already at location 0,
     /// the BRAP is executed as if it were a NOP. instruction.
     ///
-    /// ```ignore
+    /// ```text
     /// if there is a prior TARGET instruction
     ///     PC = location of TARGET opcode + 1
     /// else
@@ -555,7 +555,7 @@ pub enum Instruction {
     /// See SPTGT, BRAN, and BRAP instructions for the semantics.
     /// The TARGET opcode is just a marker, and is executed as if it were a NOP.
     ///
-    /// ```ignore
+    /// ```text
     /// PC = PC + 1 mod L
     /// SP = no change
     /// NZ = no change
@@ -566,7 +566,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `1`
     ///
-    /// ```ignore
+    /// ```text
     /// PC = PC + 2 mod L
     /// SP = no change
     /// NZ = no change
@@ -577,7 +577,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `2`
     ///
-    /// ```ignore
+    /// ```text
     /// PC = PC + 3 mod L
     /// SP = no change
     /// NZ = no change
@@ -588,7 +588,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `3`
     ///
-    /// ```ignore
+    /// ```text
     /// PC = PC + 4 mod L
     /// SP = no change
     /// NZ = no change
@@ -599,7 +599,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `4`
     ///
-    /// ```ignore
+    /// ```text
     /// PC = PC + 5 mod L
     /// SP = no change
     /// NZ = no change
@@ -610,7 +610,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `5`
     ///
-    /// ```ignore
+    /// ```text
     /// PC = PC + 6 mod L
     /// SP = no change
     /// NZ = no change
@@ -621,7 +621,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `6`
     ///
-    /// ```ignore
+    /// ```text
     /// PC = PC + 7 mod L
     /// SP = no change
     /// NZ = no change
@@ -632,7 +632,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `7`
     ///
-    /// ```ignore
+    /// ```text
     /// PC = PC + 8 mod L
     /// SP = no change
     /// NZ = no change
@@ -643,7 +643,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `8`
     ///
-    /// ```ignore
+    /// ```text
     /// PC = PC + 9 mod L
     /// SP = no change
     /// NZ = no change
@@ -654,7 +654,7 @@ pub enum Instruction {
     ///
     /// mnemonic: `9`
     ///
-    /// ```ignore
+    /// ```text
     /// PC = PC + 10 mod L
     /// SP = no change
     /// NZ = no change

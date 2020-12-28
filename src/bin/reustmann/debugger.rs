@@ -1,10 +1,11 @@
 use std::fmt::Debug;
-use std::default::Default;
-use std::io::{Read, Write};
-use std::fs::File;
-use std::error::Error;
+use std::fs;
+use std::io::{self, Read, Write};
+use std::path::Path;
+
 use reustmann::{Interpreter, DebugInfos, Program, Statement};
 use reustmann::instruction::op_codes;
+
 use debugger_error::DebuggerError;
 use command::Command;
 use display;
@@ -12,16 +13,12 @@ use sink_debug::DebugWrite;
 
 const DEFAULT_ARCH_WIDTH: usize = 8;
 
-fn create_program_from_file(filename: &String, ignore_nl: bool) -> Result<Program, String> {
-    let mut file = match File::open(filename) {
-        Err(err) => return Err(err.description().into()),
-        Ok(file) => file,
-    };
-    let program = match Program::new(&mut file, ignore_nl) {
-        Err(err) => return Err(err.into()),
-        Ok(program) => program,
-    };
-    Ok(program)
+fn create_program_from_file<P: AsRef<Path>>(path: &P, ignore_nl: bool) -> io::Result<Program> {
+    let mut instructions = fs::read(path)?;
+    if ignore_nl && instructions.last() == Some(&b'\n') {
+        instructions.pop();
+    }
+    Ok(Program::from_iter(instructions))
 }
 
 fn display_debugger_error(dbg_err: &DebuggerError) {

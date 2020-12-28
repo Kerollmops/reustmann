@@ -1,6 +1,7 @@
-use instruction::{Instruction, Mnemonic, LongMnemonic};
-use instruction::op_codes::OpCode;
 use std::ops::Deref;
+
+use crate::instruction::{Instruction, Mnemonic, LongMnemonic};
+use crate::instruction::op_codes::OpCode;
 
 /// A struct that get all instruction in bytes (used in the Interpreter).
 #[derive(Debug, Clone)]

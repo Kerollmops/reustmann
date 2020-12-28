@@ -5,67 +5,67 @@
 //! ### System and stack
 //!
 //! ```ignore
-//!     ;       NOP     No-operation
-//!     R       RESET   Reset
-//!     H       HALT    Halt program execution
-//!     I       IN      Input from stdin
-//!     O       OUT     Output to stdout
-//!     p       POP     Pop the stack
-//!     D       DUP     Duplicate the top of the stack
-//!     C       PUSHPC  Push the current PC
-//!     c       POPPC   Pop the stack and set PC
-//!     Y       POPSP   Pop the stack and set SP
-//!     G       SPTGT   Set the SP to the next TARGET
-//!     P       PUSHNZ  Push the NZ flag
-//!     S       SWAP    Swap the top two stacked words
+//! ;       NOP     No-operation
+//! R       RESET   Reset
+//! H       HALT    Halt program execution
+//! I       IN      Input from stdin
+//! O       OUT     Output to stdout
+//! p       POP     Pop the stack
+//! D       DUP     Duplicate the top of the stack
+//! C       PUSHPC  Push the current PC
+//! c       POPPC   Pop the stack and set PC
+//! Y       POPSP   Pop the stack and set SP
+//! G       SPTGT   Set the SP to the next TARGET
+//! P       PUSHNZ  Push the NZ flag
+//! S       SWAP    Swap the top two stacked words
 //! ```
 //!
 //! ### Math and logic
 //!
 //! ```ignore
-//!     0       PUSH0   Push a zero onto the stack
-//!     +       ADD     Add the top two stacked words
-//!     -       SUB     Subract the top two stacked words
-//!     .       INC     Increment the top of the stack
-//!     ,       DEC     Decrement the top of the stack
-//!     *       MUL     Multiply the top two stacked words
-//!     /       DIV     Divide the top two stacked words
-//!     ^       XOR     Bitwise exclusive OR
-//!     &       AND     Bitwise logical AND
-//!     |       OR      Bitwise logical OR
-//!     (       SHL     Logical shift left the top stacked word
-//!     )       SHR     Logical shift right the top stacked word
-//!     ~       NOT     Bitwise invert the top stacked word
+//! 0       PUSH0   Push a zero onto the stack
+//! +       ADD     Add the top two stacked words
+//! -       SUB     Subract the top two stacked words
+//! .       INC     Increment the top of the stack
+//! ,       DEC     Decrement the top of the stack
+//! *       MUL     Multiply the top two stacked words
+//! /       DIV     Divide the top two stacked words
+//! ^       XOR     Bitwise exclusive OR
+//! &       AND     Bitwise logical AND
+//! |       OR      Bitwise logical OR
+//! (       SHL     Logical shift left the top stacked word
+//! )       SHR     Logical shift right the top stacked word
+//! ~       NOT     Bitwise invert the top stacked word
 //! ```
 //!
 //! ### Conditionals
 //!
 //! ```ignore
-//!     Z       BZ      Branch on zero
-//!     z       BNZ     Branch on not-zero
-//!     =       BEQ     Branch on equal
-//!     >       BGT     Branch on greater than
-//!     {       BLT     Branch on less than
-//!     }       BGE     Branch on greater or equal
+//! Z       BZ      Branch on zero
+//! z       BNZ     Branch on not-zero
+//! =       BEQ     Branch on equal
+//! >       BGT     Branch on greater than
+//! {       BLT     Branch on less than
+//! }       BGE     Branch on greater or equal
 //! ```
 //!
 //! ### Unconditionals
 //!
 //! ```ignore
-//!     L       LOOP    Loop until the following ENDL
-//!     ]       ENDL    End of LOOP
-//!     B       BRAN    Branch to next TARGET opcode
-//!     b       BRAP    Branch to previous TARGET opcode
-//!     T       TARGET  Branch target for BRAN, BRAP
-//!     1       SKIP1   Skip over the next instruction
-//!     2       SKIP2   Skip over the next two instructions
-//!     3       SKIP3   Skip over the next three instructions
-//!     4       SKIP4   Skip over the next four instructions
-//!     5       SKIP5   Skip over the next five instructions
-//!     6       SKIP6   Skip over the next six instructions
-//!     7       SKIP7   Skip over the next seven instructions
-//!     8       SKIP8   Skip over the next eight instructions
-//!     9       SKIP9   Skip over the next nine instructions
+//! L       LOOP    Loop until the following ENDL
+//! ]       ENDL    End of LOOP
+//! B       BRAN    Branch to next TARGET opcode
+//! b       BRAP    Branch to previous TARGET opcode
+//! T       TARGET  Branch target for BRAN, BRAP
+//! 1       SKIP1   Skip over the next instruction
+//! 2       SKIP2   Skip over the next two instructions
+//! 3       SKIP3   Skip over the next three instructions
+//! 4       SKIP4   Skip over the next four instructions
+//! 5       SKIP5   Skip over the next five instructions
+//! 6       SKIP6   Skip over the next six instructions
+//! 7       SKIP7   Skip over the next seven instructions
+//! 8       SKIP8   Skip over the next eight instructions
+//! 9       SKIP9   Skip over the next nine instructions
 //! ```
 
 use std::convert::From;

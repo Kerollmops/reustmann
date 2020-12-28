@@ -12,10 +12,9 @@ mod display;
 use rustyline::completion::FilenameCompleter;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
+
 use command::Command;
 use debugger::Debugger;
-use sink_debug::sink_debug;
-use std::io::empty;
 
 fn main() {
     let file_comp = FilenameCompleter::new();
@@ -34,10 +33,10 @@ fn main() {
     //     display::display_interpreter_properties(interpreter);
     // }
 
-    // let mut input = empty();
+    // let mut input = std::io::empty();
     let mut input = "\nHello".as_bytes();
 
-    // let mut output = sink_debug();
+    // let mut output = sink_debug::sink_debug();
     let mut output = Vec::<u8>::new();
 
     loop {

@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 use reustmann::{DebugInfos, Statement, Interpreter};
-use reustmann::instruction::{ Instruction, LongMnemonic, Mnemonic, OpCode, is_valid_op_code};
+use reustmann::instruction::{Instruction, LongMnemonic, Mnemonic, OpCode, is_valid_op_code};
 
 fn is_visible(c: u8) -> bool {
     c >= 32 && c <= 126

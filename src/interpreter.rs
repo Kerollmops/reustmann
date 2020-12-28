@@ -1,11 +1,12 @@
-use std::io::{Read, Write};
 use std::cmp::min;
-use instruction::Instruction;
-use instruction::op_codes::*;
-use instruction::is_valid_mnemonic;
-use memory::OpCodes;
-use program::Program;
+use std::io::{Read, Write};
 use std::u32;
+
+use crate::instruction::Instruction;
+use crate::instruction::is_valid_mnemonic;
+use crate::instruction::op_codes::*;
+use crate::memory::OpCodes;
+use crate::program::Program;
 
 /// Type used to return the execution status of a command
 pub type ExecutionSucceeded = bool;

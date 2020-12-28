@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 use std::str::{self, FromStr};
-use nom::{IResult, space, digit, alphanumeric, is_space};
+use nom::{IResult, space, digit, is_space};
 
 #[derive(Debug, Clone)]
 pub enum Command {

@@ -1,35 +1,20 @@
-use memory::OpCodes;
-use std::io::Read;
-use std::vec::Vec;
+use std::{fs, io};
+use std::path::Path;
 
-/// Give it to the Interpreter !
+/// A set of instructions that can be given to an interpreter.
 pub struct Program(Vec<u8>);
 
 impl Program {
     /// Construct a new Program from a source.
-    pub fn new(input: &mut Read, ignore_last_newline: bool) -> Result<Program, &'static str> {
-        let mut content = Vec::new();
+    ///
+    /// Make sure that you truncate the final newline if any.
+    pub fn from_file<P: AsRef<Path>>(path: P) -> io::Result<Program> {
+        fs::read(path).map(Self::from_iter)
+    }
 
-        if input.read_to_end(&mut content).is_err() {
-            return Err("Error while trying to read input");
-        }
-        if content.is_empty() {
-            return Err("Empty program is not a valid program")
-        }
-
-        let mut instructions = Vec::with_capacity(content.len());
-        for c in content {
-            instructions.push(c);
-        }
-
-        // FIXME use not_line_ending from nom
-        if ignore_last_newline == true {
-            let endl = '\n' as u8;
-            if let Some(&endl) = instructions.last() { // FIXME '\r\n' for windows
-                instructions.pop();
-            }
-        }
-        Ok(Program(instructions))
+    /// Construct a program from a list of instructions (mnemonic).
+    pub fn from_iter<I: IntoIterator<Item=u8>>(iter: I) -> Program {
+        Program(iter.into_iter().collect())
     }
 
     /// Get the u8 representation of the source.

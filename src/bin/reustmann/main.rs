@@ -1,5 +1,4 @@
 #[macro_use] extern crate colorify;
-#[macro_use] extern crate nom;
 extern crate rustyline;
 extern crate reustmann;
 

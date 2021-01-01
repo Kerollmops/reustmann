@@ -10,5 +10,7 @@ license = "MIT"
 
 [dependencies]
 colorify = "0.2"
-nom = "^2.0"
 rustyline = "0.2"
+
+[dev-dependencies]
+bstr = "0.2.14"
